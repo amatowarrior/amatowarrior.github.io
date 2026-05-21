@@ -1335,6 +1335,30 @@ setInterval(updateZulu, 5000);
 // ════════════════════════════════
 // METAR / TAF
 // ════════════════════════════════
+// CORS-safe fetch: try direct first, then fall back to CORS proxies
+// Needed because opening index.html via file:// blocks cross-origin requests
+async function corsFetch(url) {
+  // 1. Try direct (works when served from a web server)
+  try {
+    const r = await fetch(url);
+    if (r.ok) return await r.text();
+  } catch(e) { /* CORS blocked — try proxies */ }
+
+  // 2. corsproxy.io
+  try {
+    const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+    if (r.ok) return await r.text();
+  } catch(e) { /* proxy down — try next */ }
+
+  // 3. allorigins
+  try {
+    const r = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+    if (r.ok) return await r.text();
+  } catch(e) { /* all proxies failed */ }
+
+  throw new Error('All fetch methods failed');
+}
+
 async function fetchWX(icao) {
   icao = (icao || document.getElementById('wx-icao').value || 'KMLB').trim().toUpperCase();
   if (!icao) return;
@@ -1345,45 +1369,38 @@ async function fetchWX(icao) {
   document.getElementById('wx-error').style.display   = 'none';
   document.getElementById('wx-airport-label').textContent = icao;
 
-  const metarUrl = `https://aviationweather.gov/api/data/metar?ids=${icao}&format=geojson&hours=0`;
-  const tafUrl   = `https://aviationweather.gov/api/data/taf?ids=${icao}&hours=0&sep=true`;
-
-  async function claudeFetch(url, prompt) {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 512,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const d = await r.json();
-    const t = d.content && d.content.find(b => b.type === 'text');
-    return t ? t.text.trim() : '';
-  }
+  const metarUrl = `https://aviationweather.gov/api/data/metar?ids=${icao}&format=raw&hours=2&taf=false`;
+  const tafUrl   = `https://aviationweather.gov/api/data/taf?ids=${icao}&format=raw`;
 
   try {
-    // METAR: fetch GeoJSON, extract rawOb from features[0].properties
-    const metarResp = await claudeFetch(metarUrl,
-      `Fetch this URL: ${metarUrl}
-The response is GeoJSON. Extract the value of features[0].properties.rawOb from the JSON.
-Reply with ONLY that string value, no quotes, no explanation.`
-    );
+    // Fetch both in parallel
+    const [metarResult, tafResult] = await Promise.allSettled([
+      corsFetch(metarUrl),
+      corsFetch(tafUrl)
+    ]);
 
-    // TAF: fetch plain text directly
-    const tafResp = await claudeFetch(tafUrl,
-      `Fetch this URL: ${tafUrl}
-The response is plain text containing a TAF forecast.
-Reply with ONLY the raw text content you received, no explanation.`
-    );
+    // --- METAR ---
+    const metarText = metarResult.status === 'fulfilled' ? metarResult.value.trim() : '';
+    if (metarText) {
+      document.getElementById('wx-metar-raw').textContent = metarText;
+    } else {
+      document.getElementById('wx-metar-raw').textContent = metarResult.status === 'rejected'
+        ? 'Error: ' + metarResult.reason.message
+        : 'No METAR found for ' + icao;
+    }
 
-    document.getElementById('wx-metar-raw').textContent = metarResp || 'No METAR found for ' + icao;
-    document.getElementById('wx-taf-raw').textContent   = tafResp   || 'No TAF found for '   + icao;
+    // --- TAF ---
+    const tafText = tafResult.status === 'fulfilled' ? tafResult.value.trim() : '';
+    if (tafText) {
+      document.getElementById('wx-taf-raw').textContent = tafText;
+    } else {
+      document.getElementById('wx-taf-raw').textContent = tafResult.status === 'rejected'
+        ? 'Error: ' + tafResult.reason.message
+        : 'No TAF found for ' + icao;
+    }
 
-    // Try to parse age from METAR timestamp (DDHHmmZ)
-    const m = metarResp.match(/\d{6}Z/);
+    // --- Observation age from most-recent METAR timestamp (DDHHmmZ) ---
+    const m = metarText.match(/\d{6}Z/);
     if (m) {
       const dd = parseInt(m[0].slice(0,2));
       const hh = parseInt(m[0].slice(2,4));
@@ -1391,7 +1408,14 @@ Reply with ONLY the raw text content you received, no explanation.`
       const now = new Date();
       const obs = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), dd, hh, mm));
       const diff = Math.round((Date.now() - obs) / 60000);
-      if (diff >= 0 && diff < 300) document.getElementById('wx-metar-age').textContent = diff + ' min ago';
+      if (diff >= 0 && diff < 300) {
+        document.getElementById('wx-metar-age').textContent = diff + ' min ago';
+      }
+    }
+
+    // If both failed, show the error bar
+    if (metarResult.status === 'rejected' && tafResult.status === 'rejected') {
+      throw new Error('Could not reach aviationweather.gov');
     }
 
   } catch(e) {
