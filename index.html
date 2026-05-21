@@ -158,7 +158,7 @@ nav { background: var(--sky); padding: 0 1rem; height: 52px; display: flex; alig
 <body>
 
 <nav>
-  <div class="nav-logo" id="zulu-clock" style="font-size:20px;letter-spacing:2px;">——Z</div>
+  <div class="nav-logo" id="zulu-clock">——<span style="color:var(--accent);">z</span></div>
   <button class="nav-back" id="nav-back" onclick="goHome()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15,18 9,12 15,6"/></svg>
     Home
@@ -168,7 +168,7 @@ nav { background: var(--sky); padding: 0 1rem; height: 52px; display: flex; alig
 <!-- HOME -->
 <div class="page active" id="page-home">
   <div class="home-hero">
-    <h1>Your Aviation<br>Toolkit</h1>
+    <h1 id="home-greeting">Good morning, Chris</h1>
     <p>Tools for pilots and instructors</p>
   </div>
   <div class="tools-grid">
@@ -1316,10 +1316,21 @@ function updateZulu() {
   const hh = String(now.getUTCHours()).padStart(2, '0');
   const mm = String(now.getUTCMinutes()).padStart(2, '0');
   const el = document.getElementById('zulu-clock');
-  if (el) el.textContent = hh + mm + 'z';
+  if (el) el.innerHTML = hh + mm + '<span style="color:var(--accent);">z</span>';
 }
 updateZulu();
 setInterval(updateZulu, 5000);
+
+// Home greeting based on EST/EDT local time
+(function() {
+  const el = document.getElementById('home-greeting');
+  if (!el) return;
+  // EST = UTC-5, EDT = UTC-4; use Intl to get correct local hour in ET
+  const etHour = parseInt(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour: 'numeric', hour12: false
+  }).format(new Date()));
+  el.textContent = (etHour < 12 ? 'Good morning' : 'Good afternoon') + ', Chris';
+})();
 
 // ════════════════════════════════
 // METAR / TAF
@@ -1328,57 +1339,68 @@ async function fetchWX(icao) {
   icao = (icao || document.getElementById('wx-icao').value || 'KMLB').trim().toUpperCase();
   if (!icao) return;
   document.getElementById('wx-icao').value = icao;
-  document.getElementById('wx-metar-raw').textContent = 'Loading…';
-  document.getElementById('wx-taf-raw').textContent   = 'Loading…';
+  document.getElementById('wx-metar-raw').textContent = 'Fetching…';
+  document.getElementById('wx-taf-raw').textContent   = 'Fetching…';
   document.getElementById('wx-metar-age').textContent = '';
   document.getElementById('wx-error').style.display   = 'none';
   document.getElementById('wx-airport-label').textContent = icao;
 
-  const base = 'https://aviationweather.gov/api/data';
-  const headers = { 'User-Agent': 'AviationKit/1.0' };
+  const metarUrl = `https://aviationweather.gov/api/data/metar?ids=${icao}&format=geojson&hours=0`;
+  const tafUrl   = `https://aviationweather.gov/api/data/taf?ids=${icao}&hours=0&sep=true`;
 
-  async function getJSON(url) {
-    const r = await fetch(url, { headers });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.json();
+  async function claudeFetch(url, prompt) {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 512,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const d = await r.json();
+    const t = d.content && d.content.find(b => b.type === 'text');
+    return t ? t.text.trim() : '';
   }
 
   try {
-    const [metarData, tafData] = await Promise.all([
-      getJSON(`${base}/metar?ids=${icao}&format=json`),
-      getJSON(`${base}/taf?ids=${icao}&format=json`)
-    ]);
+    // METAR: fetch GeoJSON, extract rawOb from features[0].properties
+    const metarResp = await claudeFetch(metarUrl,
+      `Fetch this URL: ${metarUrl}
+The response is GeoJSON. Extract the value of features[0].properties.rawOb from the JSON.
+Reply with ONLY that string value, no quotes, no explanation.`
+    );
 
-    // METAR
-    if (Array.isArray(metarData) && metarData.length > 0) {
-      const m = metarData[0];
-      document.getElementById('wx-metar-raw').textContent = m.rawOb || '(no raw text)';
-      const t = m.reportTime ? new Date(m.reportTime) : (m.obsTime ? new Date(m.obsTime * 1000) : null);
-      if (t) {
-        const diff = Math.round((Date.now() - t) / 60000);
-        document.getElementById('wx-metar-age').textContent = diff + ' min ago';
-      }
-    } else {
-      document.getElementById('wx-metar-raw').textContent = 'No METAR found for ' + icao;
-    }
+    // TAF: fetch plain text directly
+    const tafResp = await claudeFetch(tafUrl,
+      `Fetch this URL: ${tafUrl}
+The response is plain text containing a TAF forecast.
+Reply with ONLY the raw text content you received, no explanation.`
+    );
 
-    // TAF
-    if (Array.isArray(tafData) && tafData.length > 0) {
-      document.getElementById('wx-taf-raw').textContent = tafData[0].rawTAF || '(no raw text)';
-    } else {
-      document.getElementById('wx-taf-raw').textContent = 'No TAF found for ' + icao;
+    document.getElementById('wx-metar-raw').textContent = metarResp || 'No METAR found for ' + icao;
+    document.getElementById('wx-taf-raw').textContent   = tafResp   || 'No TAF found for '   + icao;
+
+    // Try to parse age from METAR timestamp (DDHHmmZ)
+    const m = metarResp.match(/\d{6}Z/);
+    if (m) {
+      const dd = parseInt(m[0].slice(0,2));
+      const hh = parseInt(m[0].slice(2,4));
+      const mm = parseInt(m[0].slice(4,6));
+      const now = new Date();
+      const obs = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), dd, hh, mm));
+      const diff = Math.round((Date.now() - obs) / 60000);
+      if (diff >= 0 && diff < 300) document.getElementById('wx-metar-age').textContent = diff + ' min ago';
     }
 
   } catch(e) {
     document.getElementById('wx-metar-raw').textContent = '—';
     document.getElementById('wx-taf-raw').textContent   = '—';
     const errEl = document.getElementById('wx-error');
-    errEl.innerHTML = `Unable to fetch weather data.<br>
-      You can view live data directly at:<br>
-      <a href="https://aviationweather.gov/data/metar/?ids=${icao}" target="_blank"
-         style="color:var(--sky);">METAR for ${icao}</a> &nbsp;|&nbsp;
-      <a href="https://aviationweather.gov/data/taf/?ids=${icao}" target="_blank"
-         style="color:var(--sky);">TAF for ${icao}</a>`;
+    errEl.innerHTML = `Error: ${e.message}<br>
+      <a href="https://aviationweather.gov/data/metar/?ids=${icao}" target="_blank" style="color:var(--sky);">View METAR</a> &nbsp;|&nbsp;
+      <a href="https://aviationweather.gov/data/taf/?ids=${icao}" target="_blank" style="color:var(--sky);">View TAF</a>`;
     errEl.style.display = 'block';
   }
 }
