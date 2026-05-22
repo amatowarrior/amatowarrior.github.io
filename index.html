@@ -579,18 +579,21 @@ nav { background: var(--sky); padding: 0 1rem; height: 52px; display: flex; alig
       <div style="display:flex;align-items:center;gap:10px;padding:10px 12px 4px;">
         <span id="wx-fltcat" style="display:none;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:0.5px;"></span>
       </div>
-      <div id="wx-metar-raw" style="padding:4px 12px 12px;font-family:monospace;font-size:12px;line-height:1.7;color:var(--text);white-space:pre-wrap;word-break:break-all;min-height:40px;">—</div>
+      <div id="wx-metar-raw" style="padding:4px 12px 12px;font-family:monospace;font-size:12px;line-height:1.7;color:var(--text);white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;word-break:normal;min-height:40px;">—</div>
     </div>
 
     <!-- TAF block -->
     <div class="section-card" style="margin-bottom:12px;">
       <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
         <span>TAF</span>
-        <span id="wx-taf-spinner" style="display:none;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg>
-        </span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span id="wx-taf-spinner" style="display:none;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg>
+          </span>
+          <span id="wx-taf-age" style="font-size:10px;font-weight:400;opacity:0.75;color:#fff;"></span>
+        </div>
       </div>
-      <div id="wx-taf-raw" style="padding:12px;font-family:monospace;font-size:12px;line-height:1.7;color:var(--text);white-space:pre-wrap;word-break:break-all;min-height:40px;">—</div>
+      <div id="wx-taf-raw" style="padding:12px;font-family:monospace;font-size:12px;line-height:1.7;color:var(--text);white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;word-break:normal;min-height:40px;">—</div>
     </div>
 
     <!-- TAF Decoded block -->
@@ -1722,14 +1725,44 @@ async function fetchWX(icao) {
       document.getElementById('wx-taf-decoded-card').style.display = 'none';
     }
 
-    // --- Age ---
-    const m = metarText.match(/\d{6}Z/);
-    if (m) {
-      const dd = parseInt(m[0].slice(0,2)), hh = parseInt(m[0].slice(2,4)), mm2 = parseInt(m[0].slice(4,6));
+    // --- METAR age ---
+    const metarTsMatch = metarText.match(/\d{6}Z/);
+    if (metarTsMatch) {
+      const dd = parseInt(metarTsMatch[0].slice(0,2));
+      const hh = parseInt(metarTsMatch[0].slice(2,4));
+      const mm2 = parseInt(metarTsMatch[0].slice(4,6));
       const now = new Date();
       const obs = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), dd, hh, mm2));
       const diff = Math.round((Date.now() - obs) / 60000);
-      if (diff >= 0 && diff < 300) document.getElementById('wx-metar-age').textContent = diff + ' min ago';
+      if (diff >= 0 && diff < 600) {
+        const ageEl = document.getElementById('wx-metar-age');
+        ageEl.textContent = diff + ' min ago';
+        ageEl.style.color = diff > 60 ? 'var(--accent)' : 'rgba(255,255,255,0.75)';
+        ageEl.style.opacity = '1';
+      }
+    }
+
+    // --- TAF age ---
+    if (tafText) {
+      const tafTsMatch = tafText.match(/\d{6}Z/);
+      if (tafTsMatch) {
+        const dd = parseInt(tafTsMatch[0].slice(0,2));
+        const hh = parseInt(tafTsMatch[0].slice(2,4));
+        const mm2 = parseInt(tafTsMatch[0].slice(4,6));
+        const now = new Date();
+        const issued = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), dd, hh, mm2));
+        const diffMins = Math.round((Date.now() - issued) / 60000);
+        if (diffMins >= 0 && diffMins < 1440) {
+          const tafAgeEl = document.getElementById('wx-taf-age');
+          if (tafAgeEl) {
+            const hrs = Math.floor(diffMins / 60);
+            const mins = diffMins % 60;
+            tafAgeEl.textContent = hrs > 0 ? `${hrs}h ${mins}m ago` : `${mins} min ago`;
+            tafAgeEl.style.color = diffMins > 360 ? 'var(--accent)' : 'rgba(255,255,255,0.75)';
+            tafAgeEl.style.opacity = '1';
+          }
+        }
+      }
     }
 
   } catch(e) {
