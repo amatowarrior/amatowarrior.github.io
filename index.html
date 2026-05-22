@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AviationKit</title>
+<title>Chris's Aviation Tools</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -165,8 +165,9 @@ nav { background: var(--sky); padding: 0 1rem; height: 52px; display: flex; alig
   color: var(--sky); padding: 2px 7px; border-radius: 20px;
 }
 .taf-period-cat { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
-.taf-row { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; border-bottom: 1px solid var(--border); }
-.taf-row:last-child { border-bottom: none; }
+.taf-row { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; border-top: 1px solid var(--border); }
+.taf-row:first-child { border-top: none; }
+.taf-row-noborder { border-top: none !important; padding-top: 1px; padding-bottom: 1px; }
 .taf-row-label { color: var(--muted); font-weight: 500; }
 .taf-row-value { color: var(--text); font-weight: 600; text-align: right; }
 
@@ -194,7 +195,7 @@ nav { background: var(--sky); padding: 0 1rem; height: 52px; display: flex; alig
 <div class="page active" id="page-home">
   <div class="home-hero">
     <h1 id="home-greeting">Good morning, Chris</h1>
-    <p>Tools for pilots and instructors</p>
+    <p id="home-metar-raw" style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.65);margin-top:5px;line-height:1.6;word-break:break-word;">Loading KMLB weather…</p>
   </div>
   <div class="tools-grid">
     <div class="tool-card" onclick="showPage('wb')">
@@ -558,7 +559,7 @@ nav { background: var(--sky); padding: 0 1rem; height: 52px; display: flex; alig
         <div style="display:flex;align-items:center;gap:8px;">
           <span>METAR</span>
           <select id="wx-metar-hours" onchange="fetchWX()"
-            style="border:1px solid rgba(138,154,176,0.25);border-radius:6px;background:transparent;font-size:10px;font-family:inherit;font-weight:500;color:rgba(255,255,255,0.7);padding:3px 6px;outline:none;cursor:pointer;">
+            style="border:1px solid rgba(138,154,176,0.4);border-radius:6px;background:var(--sky);font-size:10px;font-family:inherit;font-weight:500;color:#fff;padding:3px 6px;outline:none;cursor:pointer;">
             <option value="0">Most Recent</option>
             <option value="1">Past 1 hr</option>
             <option value="2">Past 2 hrs</option>
@@ -1468,7 +1469,7 @@ function parseTafPeriod(line, validDay, validMonth, validYear) {
   if (windM) {
     const dir = windM[1] === 'VRB' ? 'Variable' : windM[1] + '°';
     const spd = parseInt(windM[2]);
-    const gst = windM[4] ? ` gusting ${windM[4]} kts` : '';
+    const gst = windM[4] ? ` - ${windM[4]} kts` : '';
     obj.wind = `${dir} at ${spd} kts${gst}`;
   }
 
@@ -1651,7 +1652,10 @@ function renderTafDecoded(tafRaw) {
 
     if (p.wind)           html += row('Wind',       p.wind);
     if (p.vis)            html += row('Visibility', p.vis);
-    if (p.clouds.length)  html += row('Clouds',     p.clouds.join(', '));
+    if (p.clouds.length) {
+      const cloudVal = p.clouds.map(c => `<div>${c}</div>`).join('');
+      html += `<div class="taf-row"><span class="taf-row-label">Clouds</span><span class="taf-row-value">${cloudVal}</span></div>`;
+    }
     if (p.wx)             html += row('Weather',    p.wx);
     if (until)            html += row('Until',      until);
 
@@ -1662,8 +1666,8 @@ function renderTafDecoded(tafRaw) {
   card.style.display = 'block';
 }
 
-function row(label, value) {
-  return `<div class="taf-row"><span class="taf-row-label">${label}</span><span class="taf-row-value">${value}</span></div>`;
+function row(label, value, noBorder) {
+  return `<div class="taf-row${noBorder ? ' taf-row-noborder' : ''}"><span class="taf-row-label">${label}</span><span class="taf-row-value">${value}</span></div>`;
 }
 
 let wxRefreshInterval = null;
@@ -1701,6 +1705,11 @@ async function fetchWX(icao) {
 
     if (metarText) {
       document.getElementById('wx-metar-raw').textContent = metarText;
+      // Keep home page METAR in sync when fetching KMLB
+      if (icao === 'KMLB') {
+        const homeEl = document.getElementById('home-metar-raw');
+        if (homeEl) homeEl.textContent = metarText.split('\n')[0].trim();
+      }
       // Flight category badge
       const cat = deriveFltCat(metarText);
       const cs = flightCatStyle(cat);
@@ -1785,9 +1794,23 @@ async function fetchWX(icao) {
   wxRefreshInterval = setInterval(() => fetchWX(document.getElementById('wx-icao').value || 'KMLB'), 30000);
 }
 
+async function fetchHomeMetar() {
+  try {
+    const text = await corsFetch('https://aviationweather.gov/api/data/metar?ids=KMLB&format=raw&hours=1&taf=false');
+    const raw = text.trim().split('\n')[0].trim();
+    const el = document.getElementById('home-metar-raw');
+    if (el && raw) el.textContent = raw;
+  } catch(e) {
+    const el = document.getElementById('home-metar-raw');
+    if (el) el.textContent = 'KMLB weather unavailable';
+  }
+}
+
 setDefaults('warrior');
 drawEnvelope(null, null, null, null);
 renderCourses();
+fetchHomeMetar();
+setInterval(fetchHomeMetar, 30000);
 </script>
 </body>
 </html>
