@@ -361,7 +361,7 @@ nav { background: var(--sky); padding: 0 1rem; height: 52px; display: flex; alig
       </div>
       <div class="da-field">
         <div class="da-label">Baro Pressure</div>
-        <input class="da-input" type="number" id="da-baro" step="0.01" placeholder="29.92" oninput="calcDA();calcTOLD()">
+        <input class="da-input" type="number" id="da-baro" step="0.01" placeholder="29.92" oninput="autoBaroDot();calcDA();calcTOLD()">
         <div class="da-unit">in Hg</div>
       </div>
     </div>
@@ -943,6 +943,15 @@ function clearWB() {
   document.getElementById('wb-status').className = 'status-bar';
 }
 
+function autoBaroDot() {
+  const el = document.getElementById('da-baro');
+  const raw = el.value;
+  // Only act if user typed exactly 4 digits with no decimal
+  if (/^\d{4}$/.test(raw)) {
+    el.value = raw.slice(0, 2) + '.' + raw.slice(2);
+  }
+}
+
 function calcDA() {
   const temp = parseFloat(document.getElementById('da-temp').value);
   const baro = parseFloat(document.getElementById('da-baro').value);
@@ -1469,8 +1478,8 @@ function parseTafPeriod(line, validDay, validMonth, validYear) {
   if (windM) {
     const dir = windM[1] === 'VRB' ? 'Variable' : windM[1] + '°';
     const spd = parseInt(windM[2]);
-    const gst = windM[4] ? ` - ${windM[4]} kts` : '';
-    obj.wind = `${dir} at ${spd} kts${gst}`;
+    const gst = windM[4] ? ` - ${windM[4]}` : '';
+    obj.wind = `${dir} at ${spd}${gst} kts`;
   }
 
   // Visibility
