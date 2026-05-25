@@ -988,22 +988,18 @@ function goHome() {
 // lessonDB: { "Course": [ { name, url } ] }
 // url = relative path from lessons.json  OR  dataUrl from upload
 let lessonDB = {};
+let courseHints = {};
 
 async function loadManifest() {
   try {
     const r = await fetch('lessons.json');
     if (!r.ok) throw new Error('not found');
     const manifest = await r.json();
-    // Supported manifest formats:
-    // Simple:   { "Course": ["Lesson 1.pdf", "Lesson 2.pdf"] }
-    // Extended: { "Course": [{ "name": "Lesson 1", "file": "lessons/Course/Lesson 1.pdf" }] }
     let count = 0;
     Object.keys(manifest).forEach(course => {
-      // Course can be a plain key, or an object key with metadata via __meta
       const courseData = manifest[course];
-      const courseHint = courseData.__hint || '';
+      courseHints[course] = (Array.isArray(courseData) ? '' : courseData.__hint || '');
       lessonDB[course] = [];
-      lessonDB[course].__hint = courseHint;
       (Array.isArray(courseData) ? courseData : courseData.lessons || []).forEach(entry => {
         let name, url, hint;
         if (typeof entry === 'string') {
@@ -1019,13 +1015,11 @@ async function loadManifest() {
         count++;
       });
     });
-    // Show success, hide upload zone and info box
     const uploadZone = document.getElementById('lp-upload-zone');
     if (uploadZone) uploadZone.style.display = 'none';
     const infoBox = document.getElementById('lp-info-box');
     if (infoBox) infoBox.style.display = 'none';
   } catch(e) {
-    // No manifest — fall back to session storage uploads
     try { lessonDB = JSON.parse(sessionStorage.getItem('lp-db') || '{}'); } catch(e2) {}
   }
   renderCourses();
@@ -1068,7 +1062,7 @@ function renderCourses() {
   }
   container.innerHTML = courses.map(course => {
     const lessons = lessonDB[course];
-    const courseHint = lessons.__hint || '';
+    const courseHint = courseHints[course] || '';
     const items = lessons.map((l) => `
       <a class="lesson-item" href="${l.url}" target="_blank" rel="noopener">
         <div class="lesson-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div>
