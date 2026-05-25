@@ -994,7 +994,7 @@ async function loadManifest() {
     // Simple:   { "Course": ["Lesson 1.pdf", "Lesson 2.pdf"] }
     // Extended: { "Course": [{ "name": "Lesson 1", "file": "lessons/Course/Lesson 1.pdf" }] }
     let count = 0;
-    Object.keys(manifest).sort().forEach(course => {
+    Object.keys(manifest).forEach(course => {
       lessonDB[course] = [];
       (manifest[course] || []).forEach(entry => {
         let name, url;
@@ -1056,7 +1056,7 @@ function handlePDFUpload(e) {
 
 function renderCourses() {
   const container = document.getElementById('lp-courses-container');
-  const courses = Object.keys(lessonDB).sort();
+  const courses = Object.keys(lessonDB);
   if (!courses.length) {
     container.innerHTML = '<div class="lp-empty">No lesson plans yet.<br>Add a <code>lessons.json</code> to your repo, or upload PDFs above.</div>';
     return;
