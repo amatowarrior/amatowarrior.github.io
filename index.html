@@ -1015,8 +1015,10 @@ async function loadManifest() {
     status.style.background = 'var(--success-bg)';
     status.style.color = 'var(--success)';
     status.style.display = 'block';
-    document.getElementById('lp-upload-zone').style.display = 'none';
-    document.getElementById('lp-info-box').style.display = 'none';
+    const uploadZone = document.getElementById('lp-upload-zone');
+    if (uploadZone) uploadZone.style.display = 'none';
+    const infoBox = document.getElementById('lp-info-box');
+    if (infoBox) infoBox.style.display = 'none';
   } catch(e) {
     // No manifest — fall back to session storage uploads
     try { lessonDB = JSON.parse(sessionStorage.getItem('lp-db') || '{}'); } catch(e2) {}
