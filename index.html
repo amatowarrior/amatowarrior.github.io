@@ -138,6 +138,10 @@ nav { background: var(--sky); padding: 0 1rem; height: 52px; display: flex; alig
 .course-lessons { display: none; border-top: 1px solid var(--border); }
 .course-lessons.open { display: block; }
 .lesson-item { display: flex; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(--border); gap: 10px; cursor: pointer; transition: background 0.1s; text-decoration: none; color: inherit; }
+.lesson-name-wrap { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.lesson-hint { font-size: 10px; color: var(--muted); font-weight: 400; }
+.course-header-text { display: flex; flex-direction: column; gap: 2px; text-align: left; }
+.course-hint { font-size: 11px; font-weight: 400; color: rgba(255,255,255,0.55); }
 .lesson-item:last-child { border-bottom: none; }
 .lesson-item:hover { background: var(--surface2); }
 .lesson-icon { width: 30px; height: 30px; background: #fdecea; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -995,26 +999,27 @@ async function loadManifest() {
     // Extended: { "Course": [{ "name": "Lesson 1", "file": "lessons/Course/Lesson 1.pdf" }] }
     let count = 0;
     Object.keys(manifest).forEach(course => {
+      // Course can be a plain key, or an object key with metadata via __meta
+      const courseData = manifest[course];
+      const courseHint = courseData.__hint || '';
       lessonDB[course] = [];
-      (manifest[course] || []).forEach(entry => {
-        let name, url;
+      lessonDB[course].__hint = courseHint;
+      (Array.isArray(courseData) ? courseData : courseData.lessons || []).forEach(entry => {
+        let name, url, hint;
         if (typeof entry === 'string') {
           name = entry.replace(/\.pdf$/i, '');
           url  = `lessons/${course}/${entry}`;
+          hint = '';
         } else {
           name = entry.name || entry.file.split('/').pop().replace(/\.pdf$/i, '');
           url  = entry.file;
+          hint = entry.hint || '';
         }
-        lessonDB[course].push({ name, url });
+        lessonDB[course].push({ name, url, hint });
         count++;
       });
     });
     // Show success, hide upload zone and info box
-    const status = document.getElementById('lp-manifest-status');
-    status.textContent = '✓ Loaded ' + count + ' lesson' + (count !== 1 ? 's' : '') + ' from lessons.json';
-    status.style.background = 'var(--success-bg)';
-    status.style.color = 'var(--success)';
-    status.style.display = 'block';
     const uploadZone = document.getElementById('lp-upload-zone');
     if (uploadZone) uploadZone.style.display = 'none';
     const infoBox = document.getElementById('lp-info-box');
@@ -1063,14 +1068,24 @@ function renderCourses() {
   }
   container.innerHTML = courses.map(course => {
     const lessons = lessonDB[course];
+    const courseHint = lessons.__hint || '';
     const items = lessons.map((l) => `
       <a class="lesson-item" href="${l.url}" target="_blank" rel="noopener">
         <div class="lesson-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div>
-        <span class="lesson-name">${esc(l.name)}</span>
+        <span class="lesson-name-wrap">
+          <span class="lesson-name">${esc(l.name)}</span>
+          ${l.hint ? `<span class="lesson-hint">${esc(l.hint)}</span>` : ''}
+        </span>
         <span class="lesson-arrow"><svg viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg></span>
       </a>`).join('');
     return `<div class="course-section">
-      <button class="course-header" onclick="toggleCourse(this)">${esc(course)}<span class="badge">${lessons.length} lesson${lessons.length!==1?'s':''}</span></button>
+      <button class="course-header" onclick="toggleCourse(this)">
+        <span class="course-header-text">
+          <span>${esc(course)}</span>
+          ${courseHint ? `<span class="course-hint">${esc(courseHint)}</span>` : ''}
+        </span>
+        <span class="badge">${lessons.length} lesson${lessons.length!==1?'s':''}</span>
+      </button>
       <div class="course-lessons">${items}</div>
     </div>`;
   }).join('');
