@@ -1078,7 +1078,7 @@ function renderCourses() {
       </div>`).join('');
     return `<div class="course-section">
       <button class="course-header" onclick="toggleCourse(this)">${esc(course)}<span class="badge">${lessons.length} lesson${lessons.length!==1?'s':''}</span></button>
-      <div class="course-lessons open">${items}</div>
+      <div class="course-lessons">${items}</div>
     </div>`;
   }).join('');
 }
@@ -1088,9 +1088,15 @@ function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 
 function openPDF(course, idx) {
   const l = lessonDB[course][idx];
-  document.getElementById('pdf-title').textContent = l.name;
-  document.getElementById('pdf-frame').src = l.url;
-  document.getElementById('pdf-overlay').classList.add('open');
+  if (l.url.startsWith('data:')) {
+    // Uploaded PDF — show in overlay iframe
+    document.getElementById('pdf-title').textContent = l.name;
+    document.getElementById('pdf-frame').src = l.url;
+    document.getElementById('pdf-overlay').classList.add('open');
+  } else {
+    // Hosted file (GitHub Pages) — open in new tab, most reliable on all devices
+    window.open(l.url, '_blank');
+  }
 }
 function closePDF() {
   document.getElementById('pdf-overlay').classList.remove('open');
