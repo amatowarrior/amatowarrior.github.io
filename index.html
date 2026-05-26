@@ -230,6 +230,13 @@ nav { background: var(--sky); padding: 0 1rem; height: 52px; display: flex; alig
       <h3>METAR / TAF</h3>
       <p>Live weather for any airport</p>
     </div>
+    <div class="tool-card" onclick="showPage('currency')">
+      <div class="tool-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="8" y2="18"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+      </div>
+      <h3>Currency Calc</h3>
+      <p>Solo 90-day &amp; IFR currency</p>
+    </div>
     <div class="tool-card add">
       <div class="tool-icon">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
@@ -609,6 +616,111 @@ nav { background: var(--sky); padding: 0 1rem; height: 52px; display: flex; alig
     <div style="margin-top:10px;font-size:10px;color:var(--muted);text-align:center;">
       Data from <a href="https://aviationweather.gov" target="_blank" style="color:var(--muted);">aviationweather.gov</a> · Auto-refreshes every 30s
     </div>
+  </div>
+</div>
+
+<!-- CURRENCY CALCULATOR PAGE -->
+<div class="page" id="page-currency">
+  <div class="tool-header">
+    <h2>Currency Calculator</h2>
+    <p>Solo 90-day &amp; IFR approach currency</p>
+  </div>
+  <div style="padding:0 1.25rem 2rem;">
+
+    <!-- Sub-tabs -->
+    <div class="ac-tabs" style="margin-bottom:12px;">
+      <button class="ac-tab active" id="cur-tab-solo" onclick="switchCurTab('solo')">Solo 90-Day</button>
+      <button class="ac-tab" id="cur-tab-ifr" onclick="switchCurTab('ifr')">IFR Currency</button>
+    </div>
+
+    <!-- ── SOLO 90-DAY ── -->
+    <div id="cur-panel-solo">
+      <div class="section-card">
+        <div class="section-title">Date Endorsed</div>
+        <div class="da-grid">
+          <div class="da-field" style="grid-column:1/-1;">
+            <div class="da-label">Date of Last Solo</div>
+            <input type="date" id="solo-date" oninput="calcSolo()"
+              style="border:none;background:transparent;font-size:18px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100%;outline:none;">
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card" id="solo-result-card" style="display:none;">
+        <div class="section-title">Currency Status</div>
+        <div style="padding:14px 12px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid var(--border);padding-bottom:8px;">
+            <span style="color:var(--muted);font-weight:500;">Expires</span>
+            <span id="solo-expires" style="font-weight:700;color:var(--text);"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid var(--border);padding-bottom:8px;">
+            <span style="color:var(--muted);font-weight:500;">Days elapsed</span>
+            <span id="solo-elapsed" style="font-weight:700;"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;">
+            <span style="color:var(--muted);font-weight:500;">Days remaining</span>
+            <span id="solo-remaining" style="font-weight:700;"></span>
+          </div>
+        </div>
+        <div id="solo-status-bar" style="margin:0 12px 12px;padding:10px 12px;border-radius:var(--radius);font-size:13px;font-weight:600;text-align:center;"></div>
+      </div>
+    </div>
+
+    <!-- ── IFR CURRENCY ── -->
+    <div id="cur-panel-ifr" style="display:none;">
+      <div class="section-card">
+        <div class="section-title">6 Approaches — Dates</div>
+        <div style="padding:4px 0 8px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+            <div class="da-field" style="border-right:1px solid var(--border);">
+              <div class="da-label">Approach 1</div>
+              <input type="date" id="ifr-app-1" oninput="calcIFR()" style="border:none;background:transparent;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100%;outline:none;">
+            </div>
+            <div class="da-field">
+              <div class="da-label">Approach 2</div>
+              <input type="date" id="ifr-app-2" oninput="calcIFR()" style="border:none;background:transparent;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100%;outline:none;">
+            </div>
+            <div class="da-field" style="border-right:1px solid var(--border);">
+              <div class="da-label">Approach 3</div>
+              <input type="date" id="ifr-app-3" oninput="calcIFR()" style="border:none;background:transparent;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100%;outline:none;">
+            </div>
+            <div class="da-field">
+              <div class="da-label">Approach 4</div>
+              <input type="date" id="ifr-app-4" oninput="calcIFR()" style="border:none;background:transparent;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100%;outline:none;">
+            </div>
+            <div class="da-field" style="border-right:1px solid var(--border);">
+              <div class="da-label">Approach 5</div>
+              <input type="date" id="ifr-app-5" oninput="calcIFR()" style="border:none;background:transparent;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100%;outline:none;">
+            </div>
+            <div class="da-field">
+              <div class="da-label">Approach 6</div>
+              <input type="date" id="ifr-app-6" oninput="calcIFR()" style="border:none;background:transparent;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100%;outline:none;">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card" id="ifr-result-card" style="display:none;">
+        <div class="section-title">IFR Currency Status</div>
+        <div style="padding:14px 12px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid var(--border);padding-bottom:8px;">
+            <span style="color:var(--muted);font-weight:500;">Oldest approach</span>
+            <span id="ifr-oldest" style="font-weight:700;color:var(--text);"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid var(--border);padding-bottom:8px;">
+            <span style="color:var(--muted);font-weight:500;">Currency expires</span>
+            <span id="ifr-expires" style="font-weight:700;color:var(--text);"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;">
+            <span style="color:var(--muted);font-weight:500;">Grace period ends</span>
+            <span id="ifr-grace" style="font-weight:700;color:var(--text);"></span>
+          </div>
+        </div>
+        <div id="ifr-status-bar" style="margin:0 12px 12px;padding:10px 12px;border-radius:var(--radius);font-size:13px;font-weight:600;text-align:center;"></div>
+        <div id="ifr-note" style="margin:0 12px 12px;font-size:11px;color:var(--muted);line-height:1.6;"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1882,6 +1994,128 @@ async function fetchHomeMetar() {
     const el = document.getElementById('home-metar-raw');
     if (el) el.textContent = 'KMLB weather unavailable';
   }
+}
+
+// ════════════════════════════════
+// CURRENCY CALCULATOR
+// ════════════════════════════════
+function switchCurTab(tab) {
+  ['solo','ifr'].forEach(t => {
+    document.getElementById('cur-tab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('cur-panel-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+}
+
+function calcSolo() {
+  const input = document.getElementById('solo-date').value;
+  if (!input) { document.getElementById('solo-result-card').style.display = 'none'; return; }
+
+  const last = new Date(input + 'T00:00:00');
+  const expires = new Date(last);
+  expires.setDate(expires.getDate() + 90);
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const elapsed = Math.floor((today - last) / 86400000);
+  const remaining = 90 - elapsed;
+
+  document.getElementById('solo-expires').textContent = expires.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  document.getElementById('solo-elapsed').textContent = elapsed + ' day' + (elapsed !== 1 ? 's' : '');
+
+  const bar = document.getElementById('solo-status-bar');
+  const remEl = document.getElementById('solo-remaining');
+
+  if (remaining < 0) {
+    remEl.textContent = 'Expired';
+    remEl.style.color = 'var(--danger)';
+    bar.textContent = '✗ EXPIRED — Solo currency lapsed';
+    bar.style.background = 'var(--danger-bg)';
+    bar.style.color = 'var(--danger)';
+  } else if (remaining <= 15) {
+    remEl.textContent = remaining + ' day' + (remaining !== 1 ? 's' : '');
+    remEl.style.color = 'var(--warn)';
+    bar.textContent = '⚠ Expiring soon — ' + remaining + ' day' + (remaining !== 1 ? 's' : '') + ' remaining';
+    bar.style.background = 'var(--warn-bg)';
+    bar.style.color = 'var(--warn)';
+  } else {
+    remEl.textContent = remaining + ' day' + (remaining !== 1 ? 's' : '');
+    remEl.style.color = 'var(--success)';
+    bar.textContent = '✓ Current — ' + remaining + ' day' + (remaining !== 1 ? 's' : '') + ' remaining';
+    bar.style.background = 'var(--success-bg)';
+    bar.style.color = 'var(--success)';
+  }
+  document.getElementById('solo-result-card').style.display = 'block';
+}
+
+function calcIFR() {
+  // Collect all entered dates
+  const dates = [];
+  for (let i = 1; i <= 6; i++) {
+    const v = document.getElementById('ifr-app-' + i).value;
+    if (v) dates.push(new Date(v + 'T00:00:00'));
+  }
+  if (dates.length === 0) { document.getElementById('ifr-result-card').style.display = 'none'; return; }
+
+  dates.sort((a, b) => a - b);
+  const oldest = dates[0];
+  const newest = dates[dates.length - 1];
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // 6 calendar months from the oldest approach — currency window
+  // FAA: 6 approaches within preceding 6 calendar months
+  // Currency expires at the END of the 6th calendar month after the oldest approach
+  const expiresMonth = new Date(oldest);
+  expiresMonth.setMonth(expiresMonth.getMonth() + 6);
+  // End of that month
+  const expires = new Date(expiresMonth.getFullYear(), expiresMonth.getMonth() + 1, 0);
+
+  // Grace period: additional 6 calendar months (can still fly IFR but must get IPC to regain currency)
+  const graceMonth = new Date(oldest);
+  graceMonth.setMonth(graceMonth.getMonth() + 12);
+  const grace = new Date(graceMonth.getFullYear(), graceMonth.getMonth() + 1, 0);
+
+  const fmt = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  document.getElementById('ifr-oldest').textContent = fmt(oldest);
+  document.getElementById('ifr-expires').textContent = fmt(expires);
+  document.getElementById('ifr-grace').textContent = fmt(grace);
+
+  const bar = document.getElementById('ifr-status-bar');
+  const note = document.getElementById('ifr-note');
+
+  if (dates.length < 6) {
+    bar.textContent = '⚠ Only ' + dates.length + ' of 6 approaches entered';
+    bar.style.background = 'var(--warn-bg)';
+    bar.style.color = 'var(--warn)';
+    note.textContent = 'Enter all 6 approach dates to calculate full currency status.';
+    document.getElementById('ifr-result-card').style.display = 'block';
+    return;
+  }
+
+  if (today <= expires) {
+    const daysLeft = Math.floor((expires - today) / 86400000);
+    bar.textContent = '✓ IFR Current — expires ' + fmt(expires);
+    bar.style.background = daysLeft <= 30 ? 'var(--warn-bg)' : 'var(--success-bg)';
+    bar.style.color = daysLeft <= 30 ? 'var(--warn)' : 'var(--success)';
+    note.textContent = daysLeft <= 30
+      ? '⚠ Expiring in ' + daysLeft + ' days — plan your next 6 approaches soon.'
+      : 'All 6 approaches completed within the past 6 calendar months per FAR 61.57(c).';
+  } else if (today <= grace) {
+    const daysToIPC = Math.floor((grace - today) / 86400000);
+    bar.textContent = '⚠ In Grace Period — IPC Required';
+    bar.style.background = 'var(--warn-bg)';
+    bar.style.color = 'var(--warn)';
+    note.textContent = 'You may act as PIC of an IFR flight during the grace period, but you are not current. '
+      + 'An IPC must be completed before acting as PIC under IFR. Grace period ends ' + fmt(grace) + ' (' + daysToIPC + ' days).';
+  } else {
+    bar.textContent = '✗ IFR Currency Lapsed — IPC Required';
+    bar.style.background = 'var(--danger-bg)';
+    bar.style.color = 'var(--danger)';
+    note.textContent = 'Grace period has ended. An Instrument Proficiency Check (IPC) with a CFII or examiner is required before acting as PIC under IFR. FAR 61.57(d).';
+  }
+
+  document.getElementById('ifr-result-card').style.display = 'block';
 }
 
 setDefaults('warrior');

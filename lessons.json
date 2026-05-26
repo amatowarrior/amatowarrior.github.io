@@ -1,6 +1,6 @@
 {
-  "Private Pilot V2": {
-    "__hint": "Flight 1 V2",
+  "Private Pilot (V2)": {
+    "__hint": "Flight 1 (V2)",
     "lessons": [
       { "name": "Lesson 101", "file": "lessons/Private Pilot V2/Lesson 101.pdf", "hint": "GROUND: Introduction and FOM" },
       { "name": "Lesson 102", "file": "lessons/Private Pilot V2/Lesson 102.pdf", "hint": "GROUND: Preflight Planning" },
@@ -49,8 +49,8 @@
       { "name": "Lesson 145b", "file": "lessons/Private Pilot V2/Lesson 145b.pdf", "hint": "FLIGHT: EOC Mock" }
     ]
   },
-  "Private Pilot V5": {
-    "__hint": "Flight 1 V5",
+  "Private Pilot (V5)": {
+    "__hint": "Flight 1 (V5)",
     "lessons": [
       { "name": "ILS Approach", "file": "lessons/Private Pilot V5/ILS Approach.pdf", "hint": "" },
       { "name": "VOR Approach", "file": "lessons/Private Pilot V5/VOR Approach.pdf", "hint": "" },
