@@ -639,7 +639,7 @@ nav { background: var(--sky); padding: 0 1rem; height: 52px; display: flex; alig
         <div class="section-title">Date Endorsed</div>
         <div class="da-grid">
           <div class="da-field" style="grid-column:1/-1;">
-            <div class="da-label">Date of Last Solo</div>
+            <div class="da-label">Date Endorsed</div>
             <input type="date" id="solo-date" oninput="calcSolo()"
               style="border:none;background:transparent;font-size:18px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100%;outline:none;">
           </div>
@@ -669,34 +669,14 @@ nav { background: var(--sky); padding: 0 1rem; height: 52px; display: flex; alig
     <!-- ── IFR CURRENCY ── -->
     <div id="cur-panel-ifr" style="display:none;">
       <div class="section-card">
-        <div class="section-title">6 Approaches — Dates</div>
-        <div style="padding:4px 0 8px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
-            <div class="da-field" style="border-right:1px solid var(--border);">
-              <div class="da-label">Approach 1</div>
-              <input type="date" id="ifr-app-1" oninput="calcIFR()" style="border:none;background:transparent;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100%;outline:none;">
-            </div>
-            <div class="da-field">
-              <div class="da-label">Approach 2</div>
-              <input type="date" id="ifr-app-2" oninput="calcIFR()" style="border:none;background:transparent;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100%;outline:none;">
-            </div>
-            <div class="da-field" style="border-right:1px solid var(--border);">
-              <div class="da-label">Approach 3</div>
-              <input type="date" id="ifr-app-3" oninput="calcIFR()" style="border:none;background:transparent;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100%;outline:none;">
-            </div>
-            <div class="da-field">
-              <div class="da-label">Approach 4</div>
-              <input type="date" id="ifr-app-4" oninput="calcIFR()" style="border:none;background:transparent;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100%;outline:none;">
-            </div>
-            <div class="da-field" style="border-right:1px solid var(--border);">
-              <div class="da-label">Approach 5</div>
-              <input type="date" id="ifr-app-5" oninput="calcIFR()" style="border:none;background:transparent;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100%;outline:none;">
-            </div>
-            <div class="da-field">
-              <div class="da-label">Approach 6</div>
-              <input type="date" id="ifr-app-6" oninput="calcIFR()" style="border:none;background:transparent;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100%;outline:none;">
-            </div>
-          </div>
+        <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Approaches</span>
+          <span id="ifr-app-count" style="font-size:10px;font-weight:500;opacity:0.75;">0 / 6 logged</span>
+        </div>
+        <div id="ifr-rows" style="padding:0;"></div>
+        <div style="padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;">
+          <button class="send-btn" onclick="addIFRRow()" style="flex:1;text-align:center;">+ Add Date</button>
+          <button class="send-btn" onclick="clearIFRRows()" style="flex:1;text-align:center;background:var(--surface);color:var(--text);border:1px solid var(--border);">Clear All</button>
         </div>
       </div>
 
@@ -2004,6 +1984,7 @@ function switchCurTab(tab) {
     document.getElementById('cur-tab-' + t).classList.toggle('active', t === tab);
     document.getElementById('cur-panel-' + t).style.display = t === tab ? 'block' : 'none';
   });
+  if (tab === 'ifr') initIFR();
 }
 
 function calcSolo() {
@@ -2048,32 +2029,82 @@ function calcSolo() {
   document.getElementById('solo-result-card').style.display = 'block';
 }
 
+let ifrRowId = 0;
+
+function addIFRRow(date, count) {
+  const container = document.getElementById('ifr-rows');
+  const id = ++ifrRowId;
+  const div = document.createElement('div');
+  div.id = 'ifr-row-' + id;
+  div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--border);';
+  div.innerHTML = `
+    <input type="date" value="${date||''}" oninput="calcIFR()"
+      style="flex:1;border:none;background:transparent;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);outline:none;min-width:0;">
+    <span style="font-size:11px;color:var(--muted);white-space:nowrap;">approaches:</span>
+    <button onclick="adjustIFRCount(${id},-1)" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);font-size:16px;line-height:1;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;">−</button>
+    <span id="ifr-cnt-${id}" style="font-size:15px;font-weight:700;min-width:18px;text-align:center;">${count||1}</span>
+    <button onclick="adjustIFRCount(${id},+1)" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);font-size:16px;line-height:1;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;">+</button>
+    <button onclick="removeIFRRow(${id})" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--danger-bg);color:var(--danger);font-size:15px;line-height:1;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;">×</button>`;
+  container.appendChild(div);
+  calcIFR();
+}
+
+function adjustIFRCount(id, delta) {
+  const el = document.getElementById('ifr-cnt-' + id);
+  const cur = parseInt(el.textContent) || 1;
+  const next = Math.max(1, Math.min(6, cur + delta));
+  el.textContent = next;
+  calcIFR();
+}
+
+function removeIFRRow(id) {
+  const row = document.getElementById('ifr-row-' + id);
+  if (row) row.remove();
+  calcIFR();
+}
+
+function clearIFRRows() {
+  document.getElementById('ifr-rows').innerHTML = '';
+  ifrRowId = 0;
+  document.getElementById('ifr-result-card').style.display = 'none';
+  document.getElementById('ifr-app-count').textContent = '0 / 6 logged';
+}
+
 function calcIFR() {
-  // Collect all entered dates
+  // Gather all rows
+  const rows = document.querySelectorAll('#ifr-rows > div');
   const dates = [];
-  for (let i = 1; i <= 6; i++) {
-    const v = document.getElementById('ifr-app-' + i).value;
-    if (v) dates.push(new Date(v + 'T00:00:00'));
+  rows.forEach(row => {
+    const dateInput = row.querySelector('input[type="date"]');
+    const cntEl = row.querySelector('[id^="ifr-cnt-"]');
+    if (!dateInput || !dateInput.value) return;
+    const cnt = parseInt(cntEl ? cntEl.textContent : 1) || 1;
+    for (let i = 0; i < cnt; i++) {
+      dates.push(new Date(dateInput.value + 'T00:00:00'));
+    }
+  });
+
+  const total = dates.length;
+  document.getElementById('ifr-app-count').textContent = total + ' / 6 logged';
+
+  if (total === 0) {
+    document.getElementById('ifr-result-card').style.display = 'none';
+    return;
   }
-  if (dates.length === 0) { document.getElementById('ifr-result-card').style.display = 'none'; return; }
 
   dates.sort((a, b) => a - b);
   const oldest = dates[0];
-  const newest = dates[dates.length - 1];
   const today = new Date(); today.setHours(0,0,0,0);
 
-  // 6 calendar months from the oldest approach — currency window
-  // FAA: 6 approaches within preceding 6 calendar months
-  // Currency expires at the END of the 6th calendar month after the oldest approach
-  const expiresMonth = new Date(oldest);
-  expiresMonth.setMonth(expiresMonth.getMonth() + 6);
-  // End of that month
-  const expires = new Date(expiresMonth.getFullYear(), expiresMonth.getMonth() + 1, 0);
+  // Currency expires at end of the 6th calendar month after oldest approach
+  const expiresDate = new Date(oldest);
+  expiresDate.setMonth(expiresDate.getMonth() + 6);
+  const expires = new Date(expiresDate.getFullYear(), expiresDate.getMonth() + 1, 0);
 
-  // Grace period: additional 6 calendar months (can still fly IFR but must get IPC to regain currency)
-  const graceMonth = new Date(oldest);
-  graceMonth.setMonth(graceMonth.getMonth() + 12);
-  const grace = new Date(graceMonth.getFullYear(), graceMonth.getMonth() + 1, 0);
+  // Grace period: end of 12th calendar month after oldest approach
+  const graceDate = new Date(oldest);
+  graceDate.setMonth(graceDate.getMonth() + 12);
+  const grace = new Date(graceDate.getFullYear(), graceDate.getMonth() + 1, 0);
 
   const fmt = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
@@ -2084,30 +2115,27 @@ function calcIFR() {
   const bar = document.getElementById('ifr-status-bar');
   const note = document.getElementById('ifr-note');
 
-  if (dates.length < 6) {
-    bar.textContent = '⚠ Only ' + dates.length + ' of 6 approaches entered';
+  if (total < 6) {
+    bar.textContent = '⚠ Only ' + total + ' of 6 approaches entered';
     bar.style.background = 'var(--warn-bg)';
     bar.style.color = 'var(--warn)';
-    note.textContent = 'Enter all 6 approach dates to calculate full currency status.';
-    document.getElementById('ifr-result-card').style.display = 'block';
-    return;
-  }
-
-  if (today <= expires) {
+    note.textContent = 'Log all 6 approaches to calculate full currency status.';
+  } else if (today <= expires) {
     const daysLeft = Math.floor((expires - today) / 86400000);
     bar.textContent = '✓ IFR Current — expires ' + fmt(expires);
     bar.style.background = daysLeft <= 30 ? 'var(--warn-bg)' : 'var(--success-bg)';
     bar.style.color = daysLeft <= 30 ? 'var(--warn)' : 'var(--success)';
     note.textContent = daysLeft <= 30
-      ? '⚠ Expiring in ' + daysLeft + ' days — plan your next 6 approaches soon.'
+      ? '⚠ Expiring in ' + daysLeft + ' days — complete your next 6 approaches soon.'
       : 'All 6 approaches completed within the past 6 calendar months per FAR 61.57(c).';
   } else if (today <= grace) {
-    const daysToIPC = Math.floor((grace - today) / 86400000);
-    bar.textContent = '⚠ In Grace Period — IPC Required';
+    const daysLeft = Math.floor((grace - today) / 86400000);
+    bar.textContent = '⚠ In Grace Period — Cannot File IFR';
     bar.style.background = 'var(--warn-bg)';
     bar.style.color = 'var(--warn)';
-    note.textContent = 'You may act as PIC of an IFR flight during the grace period, but you are not current. '
-      + 'An IPC must be completed before acting as PIC under IFR. Grace period ends ' + fmt(grace) + ' (' + daysToIPC + ' days).';
+    note.textContent = 'IFR currency has lapsed. You may NOT act as PIC under IFR or in IMC. '
+      + 'To restore currency without an IPC, complete 6 approaches, holding, and intercepting/tracking within a 6-month window before the grace period ends. '
+      + 'Grace period ends ' + fmt(grace) + ' (' + daysLeft + ' days remaining). After that, an IPC is required per FAR 61.57(d).';
   } else {
     bar.textContent = '✗ IFR Currency Lapsed — IPC Required';
     bar.style.background = 'var(--danger-bg)';
@@ -2116,6 +2144,11 @@ function calcIFR() {
   }
 
   document.getElementById('ifr-result-card').style.display = 'block';
+}
+
+// Seed with 1 empty row on load
+function initIFR() {
+  if (document.getElementById('ifr-rows').children.length === 0) addIFRRow();
 }
 
 setDefaults('warrior');
