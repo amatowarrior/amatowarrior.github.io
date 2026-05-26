@@ -1758,27 +1758,28 @@ async function fetchWX(icao) {
 
   const hoursEl = document.getElementById('wx-metar-hours');
   const hours = hoursEl ? parseInt(hoursEl.value) : 0;
-  const metarHoursParam = hours === 0 ? 1 : hours;
-  const metarUrl = `https://aviationweather.gov/api/data/metar?ids=${icao}&format=raw&hours=${metarHoursParam}&taf=false`;
-  const tafUrl   = `https://aviationweather.gov/api/data/taf?ids=${icao}&format=raw`;
+  const metarHoursParam = hours === 0 ? 0 : hours;
+  // Use the sep=true format confirmed working; hours=0 returns most recent only
+  const metarUrl = `https://aviationweather.gov/api/data/metar?ids=${icao}&hours=${metarHoursParam}&sep=true`;
+  const tafUrl   = `https://aviationweather.gov/api/data/taf?ids=${icao}&hours=0&sep=true`;
 
   try {
-    const [metarResult, tafResult] = await Promise.allSettled([
-      corsFetch(metarUrl),
-      corsFetch(tafUrl)
-    ]);
+    // Fetch sequentially to avoid parallel CORS connection issues
+    let metarRaw = '', tafRaw = '', metarErr = null, tafErr = null;
+    try { metarRaw = await corsFetch(metarUrl); } catch(e) { metarErr = e; }
+    try { tafRaw   = await corsFetch(tafUrl);   } catch(e) { tafErr   = e; }
+
+    const metarResult = metarErr
+      ? { status: 'rejected', reason: metarErr }
+      : { status: 'fulfilled', value: metarRaw };
+    const tafResult = tafErr
+      ? { status: 'rejected', reason: tafErr }
+      : { status: 'fulfilled', value: tafRaw };
 
     // --- METAR ---
     let metarText = metarResult.status === 'fulfilled' ? metarResult.value.trim() : '';
-    // Always filter to only lines starting with METAR or SPECI (strip any TAF lines that leaked in)
-    if (metarText) {
-      const metarLines = metarText.split('\n').filter(l => /^(METAR|SPECI|\w{4}\s+\d{6}Z)/.test(l.trim()));
-      if (hours === 0) {
-        metarText = metarLines[0] ? metarLines[0].trim() : metarText.split('\n')[0].trim();
-      } else {
-        metarText = metarLines.length ? metarLines.join('\n') : metarText;
-      }
-    }
+    // sep=true returns one METAR per line; for Most Recent just take first line
+    if (metarText && hours === 0) metarText = metarText.split('\n')[0].trim();
 
     if (metarText) {
       document.getElementById('wx-metar-raw').textContent = metarText;
@@ -1873,7 +1874,7 @@ async function fetchWX(icao) {
 
 async function fetchHomeMetar() {
   try {
-    const text = await corsFetch('https://aviationweather.gov/api/data/metar?ids=KMLB&format=raw&hours=1&taf=false');
+    const text = await corsFetch('https://aviationweather.gov/api/data/metar?ids=KMLB&hours=0&sep=true');
     const raw = text.trim().split('\n')[0].trim();
     const el = document.getElementById('home-metar-raw');
     if (el && raw) el.textContent = raw;
