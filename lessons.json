@@ -2,66 +2,636 @@
   "Private Pilot (V2)": {
     "__hint": "Flight 1 (V2)",
     "lessons": [
-      { "name": "Lesson 101", "file": "lessons/Private Pilot V2/Lesson 101.pdf", "hint": "GROUND: Introduction and FOM" },
-      { "name": "Lesson 102", "file": "lessons/Private Pilot V2/Lesson 102.pdf", "hint": "GROUND: Preflight Planning" },
-      { "name": "Lesson 103", "file": "lessons/Private Pilot V2/Lesson 103.pdf", "hint": "GROUND: Checklists and Preflight Inspection" },
-      { "name": "Lesson 104", "file": "lessons/Private Pilot V2/Lesson 104.pdf", "hint": "SIM: Primary and Secondary Flight Controls" },
-      { "name": "Lesson 105", "file": "lessons/Private Pilot V2/Lesson 105.pdf", "hint": "FLIGHT: Primary and Secondary Flight Controls" },
-      { "name": "Lesson 106", "file": "lessons/Private Pilot V2/Lesson 106.pdf", "hint": "SIM: Taxiing, Straight and Level" },
-      { "name": "Lesson 107", "file": "lessons/Private Pilot V2/Lesson 107.pdf", "hint": "FLIGHT: 106 + Tracking Along a Road" },
-      { "name": "Lesson 108", "file": "lessons/Private Pilot V2/Lesson 108.pdf", "hint": "SIM: Climbs, Descents, and Turns" },
-      { "name": "Lesson 109", "file": "lessons/Private Pilot V2/Lesson 109.pdf", "hint": "FLIGHT: Climbs, Descents, and Turns" },
-      { "name": "Lesson 110", "file": "lessons/Private Pilot V2/Lesson 110.pdf", "hint": "FLIGHT: Takeoffs" },
-      { "name": "Lesson 111", "file": "lessons/Private Pilot V2/Lesson 111.pdf", "hint": "FLIGHT: Slow Flight and Stall Introduction" },
-      { "name": "Lesson 112", "file": "lessons/Private Pilot V2/Lesson 112.pdf", "hint": "FLIGHT: Stalls and Turns Around a Point" },
-      { "name": "Lesson 113", "file": "lessons/Private Pilot V2/Lesson 113.pdf", "hint": "GROUND: Stage 1 Ground" },
-      { "name": "Lesson 114", "file": "lessons/Private Pilot V2/Lesson 114.pdf", "hint": "FLIGHT: Ground Reference Maneuvers and Forward Slips" },
-      { "name": "Lesson 115", "file": "lessons/Private Pilot V2/Lesson 115.pdf", "hint": "FLIGHT: Non-Towered Ops, Emergencies, and Steep Turns" },
-      { "name": "Lesson 116", "file": "lessons/Private Pilot V2/Lesson 116.pdf", "hint": "FLIGHT: 115 Proficiency + Towered Ops" },
-      { "name": "Lesson 117", "file": "lessons/Private Pilot V2/Lesson 117.pdf", "hint": "FLIGHT: No Flap + Power Off Landing" },
-      { "name": "Lesson 118", "file": "lessons/Private Pilot V2/Lesson 118.pdf", "hint": "GROUND: Stage 1 Mock" },
-      { "name": "Lesson 119", "file": "lessons/Private Pilot V2/Lesson 119.pdf", "hint": "FLIGHT: Stage 1 Mock" },
-      { "name": "Lesson 121", "file": "lessons/Private Pilot V2/Lesson 121.pdf", "hint": "FLIGHT: Dual Solo" },
-      { "name": "Lesson 122", "file": "lessons/Private Pilot V2/Lesson 122.pdf", "hint": "FLIGHT: Dual Solo" },
-      { "name": "Lesson 123", "file": "lessons/Private Pilot V2/Lesson 123.pdf", "hint": "SOLO: Pattern Solo" },
-      { "name": "Lesson 124", "file": "lessons/Private Pilot V2/Lesson 124.pdf", "hint": "FLIGHT: Short/Soft-Field Departure and Landings + Steep Turns" },
-      { "name": "Lesson 125", "file": "lessons/Private Pilot V2/Lesson 125.pdf", "hint": "SIM: BAI, VORs, Unusual Attitudes" },
-      { "name": "Lesson 126", "file": "lessons/Private Pilot V2/Lesson 126.pdf", "hint": "FLIGHT: BAI, VORs, Unusual Attitudes" },
-      { "name": "Lesson 127", "file": "lessons/Private Pilot V2/Lesson 127.pdf", "hint": "GROUND: Weather, Airspace, Cross Countries" },
-      { "name": "Lesson 128", "file": "lessons/Private Pilot V2/Lesson 128.pdf", "hint": "FLIGHT: First Cross Country" },
-      { "name": "Lesson 129", "file": "lessons/Private Pilot V2/Lesson 129.pdf", "hint": "FLIGHT: Cross Country to Non-Towered" },
-      { "name": "Lesson 130", "file": "lessons/Private Pilot V2/Lesson 130.pdf", "hint": "FLIGHT: Cross Country to Towered" },
-      { "name": "Lesson 131", "file": "lessons/Private Pilot V2/Lesson 131.pdf", "hint": "SOLO: Local Solo" },
-      { "name": "Lesson 132", "file": "lessons/Private Pilot V2/Lesson 132.pdf", "hint": "SOLO: Local Solo" },
-      { "name": "Lesson 133", "file": "lessons/Private Pilot V2/Lesson 133.pdf", "hint": "FLIGHT: Aeromedical + Night Ops" },
-      { "name": "Lesson 134", "file": "lessons/Private Pilot V2/Lesson 134.pdf", "hint": "GROUND: Night Cross Country Planning" },
-      { "name": "Lesson 135", "file": "lessons/Private Pilot V2/Lesson 135.pdf", "hint": "FLIGHT: Night Cross Country" },
-	  { "name": "Lesson 136 GROUND", "file": "lessons/Private Pilot V2/Lesson 136 GROUND.pdf", "hint": "GROUND: Stage 2 Mock" },
-      { "name": "Lesson 136 FLIGHT", "file": "lessons/Private Pilot V2/Lesson 136 FLIGHT.pdf", "hint": "FLIGHT: Stage 2 Mock" },
-      { "name": "Lesson 138", "file": "lessons/Private Pilot V2/Lesson 138.pdf", "hint": "SOLO: Solo Cross Country" },
-      { "name": "Lesson 139", "file": "lessons/Private Pilot V2/Lesson 139.pdf", "hint": "SOLO: Solo Cross Country (3 Point)" },
-      { "name": "Lesson 140", "file": "lessons/Private Pilot V2/Lesson 140.pdf", "hint": "GROUND: Stage 3 Ground (Find Weak Areas)" },
-      { "name": "Lesson 141", "file": "lessons/Private Pilot V2/Lesson 141.pdf", "hint": "FLIGHT: Stage 3 Dual (Find Weak Areas)" },
-      { "name": "Lesson 142", "file": "lessons/Private Pilot V2/Lesson 142.pdf", "hint": "GROUND: Stage 3 Ground (Treat as Mock)" },
-      { "name": "Lesson 143", "file": "lessons/Private Pilot V2/Lesson 143.pdf", "hint": "SOLO: Stage 3 Solo (Work on Weak Areas)" },
-      { "name": "Lesson 144", "file": "lessons/Private Pilot V2/Lesson 144.pdf", "hint": "FLIGHT: Stage 3 Dual (Treat as Mock)" },
-      { "name": "Lesson 145a", "file": "lessons/Private Pilot V2/Lesson 145a.pdf", "hint": "GROUND: EOC Mock" },
-      { "name": "Lesson 145b", "file": "lessons/Private Pilot V2/Lesson 145b.pdf", "hint": "FLIGHT: EOC Mock" }
+      {
+        "name": "Lesson 101",
+        "file": "lessons/Private Pilot V2/Lesson 101.pdf",
+        "hint": "GROUND: Introduction and FOM"
+      },
+      {
+        "name": "Lesson 102",
+        "file": "lessons/Private Pilot V2/Lesson 102.pdf",
+        "hint": "GROUND: Preflight Planning"
+      },
+      {
+        "name": "Lesson 103",
+        "file": "lessons/Private Pilot V2/Lesson 103.pdf",
+        "hint": "GROUND: Checklists and Preflight Inspection"
+      },
+      {
+        "name": "Lesson 104",
+        "file": "lessons/Private Pilot V2/Lesson 104.pdf",
+        "hint": "SIM: Primary and Secondary Flight Controls"
+      },
+      {
+        "name": "Lesson 105",
+        "file": "lessons/Private Pilot V2/Lesson 105.pdf",
+        "hint": "FLIGHT: Primary and Secondary Flight Controls"
+      },
+      {
+        "name": "Lesson 106",
+        "file": "lessons/Private Pilot V2/Lesson 106.pdf",
+        "hint": "SIM: Taxiing, Straight and Level"
+      },
+      {
+        "name": "Lesson 107",
+        "file": "lessons/Private Pilot V2/Lesson 107.pdf",
+        "hint": "FLIGHT: 106 + Tracking Along a Road"
+      },
+      {
+        "name": "Lesson 108",
+        "file": "lessons/Private Pilot V2/Lesson 108.pdf",
+        "hint": "SIM: Climbs, Descents, and Turns"
+      },
+      {
+        "name": "Lesson 109",
+        "file": "lessons/Private Pilot V2/Lesson 109.pdf",
+        "hint": "FLIGHT: Climbs, Descents, and Turns"
+      },
+      {
+        "name": "Lesson 110",
+        "file": "lessons/Private Pilot V2/Lesson 110.pdf",
+        "hint": "FLIGHT: Takeoffs"
+      },
+      {
+        "name": "Lesson 111",
+        "file": "lessons/Private Pilot V2/Lesson 111.pdf",
+        "hint": "FLIGHT: Slow Flight and Stall Introduction"
+      },
+      {
+        "name": "Lesson 112",
+        "file": "lessons/Private Pilot V2/Lesson 112.pdf",
+        "hint": "FLIGHT: Stalls and Turns Around a Point"
+      },
+      {
+        "name": "Lesson 113",
+        "file": "lessons/Private Pilot V2/Lesson 113.pdf",
+        "hint": "GROUND: Stage 1 Ground"
+      },
+      {
+        "name": "Lesson 114",
+        "file": "lessons/Private Pilot V2/Lesson 114.pdf",
+        "hint": "FLIGHT: Ground Reference Maneuvers and Forward Slips"
+      },
+      {
+        "name": "Lesson 115",
+        "file": "lessons/Private Pilot V2/Lesson 115.pdf",
+        "hint": "FLIGHT: Non-Towered Ops, Emergencies, and Steep Turns"
+      },
+      {
+        "name": "Lesson 116",
+        "file": "lessons/Private Pilot V2/Lesson 116.pdf",
+        "hint": "FLIGHT: 115 Proficiency + Towered Ops"
+      },
+      {
+        "name": "Lesson 117",
+        "file": "lessons/Private Pilot V2/Lesson 117.pdf",
+        "hint": "FLIGHT: No Flap + Power Off Landing"
+      },
+      {
+        "name": "Lesson 118",
+        "file": "lessons/Private Pilot V2/Lesson 118.pdf",
+        "hint": "GROUND: Stage 1 Mock"
+      },
+      {
+        "name": "Lesson 119",
+        "file": "lessons/Private Pilot V2/Lesson 119.pdf",
+        "hint": "FLIGHT: Stage 1 Mock"
+      },
+      {
+        "name": "Lesson 121",
+        "file": "lessons/Private Pilot V2/Lesson 121.pdf",
+        "hint": "FLIGHT: Dual Solo"
+      },
+      {
+        "name": "Lesson 122",
+        "file": "lessons/Private Pilot V2/Lesson 122.pdf",
+        "hint": "FLIGHT: Dual Solo"
+      },
+      {
+        "name": "Lesson 123",
+        "file": "lessons/Private Pilot V2/Lesson 123.pdf",
+        "hint": "SOLO: Pattern Solo"
+      },
+      {
+        "name": "Lesson 124",
+        "file": "lessons/Private Pilot V2/Lesson 124.pdf",
+        "hint": "FLIGHT: Short/Soft-Field Departure and Landings + Steep Turns"
+      },
+      {
+        "name": "Lesson 125",
+        "file": "lessons/Private Pilot V2/Lesson 125.pdf",
+        "hint": "SIM: BAI, VORs, Unusual Attitudes"
+      },
+      {
+        "name": "Lesson 126",
+        "file": "lessons/Private Pilot V2/Lesson 126.pdf",
+        "hint": "FLIGHT: BAI, VORs, Unusual Attitudes"
+      },
+      {
+        "name": "Lesson 127",
+        "file": "lessons/Private Pilot V2/Lesson 127.pdf",
+        "hint": "GROUND: Weather, Airspace, Cross Countries"
+      },
+      {
+        "name": "Lesson 128",
+        "file": "lessons/Private Pilot V2/Lesson 128.pdf",
+        "hint": "FLIGHT: First Cross Country"
+      },
+      {
+        "name": "Lesson 129",
+        "file": "lessons/Private Pilot V2/Lesson 129.pdf",
+        "hint": "FLIGHT: Cross Country to Non-Towered"
+      },
+      {
+        "name": "Lesson 130",
+        "file": "lessons/Private Pilot V2/Lesson 130.pdf",
+        "hint": "FLIGHT: Cross Country to Towered"
+      },
+      {
+        "name": "Lesson 131",
+        "file": "lessons/Private Pilot V2/Lesson 131.pdf",
+        "hint": "SOLO: Local Solo"
+      },
+      {
+        "name": "Lesson 132",
+        "file": "lessons/Private Pilot V2/Lesson 132.pdf",
+        "hint": "SOLO: Local Solo"
+      },
+      {
+        "name": "Lesson 133",
+        "file": "lessons/Private Pilot V2/Lesson 133.pdf",
+        "hint": "FLIGHT: Aeromedical + Night Ops"
+      },
+      {
+        "name": "Lesson 134",
+        "file": "lessons/Private Pilot V2/Lesson 134.pdf",
+        "hint": "GROUND: Night Cross Country Planning"
+      },
+      {
+        "name": "Lesson 135",
+        "file": "lessons/Private Pilot V2/Lesson 135.pdf",
+        "hint": "FLIGHT: Night Cross Country"
+      },
+      {
+        "name": "Lesson 136 GROUND",
+        "file": "lessons/Private Pilot V2/Lesson 136 GROUND.pdf",
+        "hint": "GROUND: Stage 2 Mock"
+      },
+      {
+        "name": "Lesson 136 FLIGHT",
+        "file": "lessons/Private Pilot V2/Lesson 136 FLIGHT.pdf",
+        "hint": "FLIGHT: Stage 2 Mock"
+      },
+      {
+        "name": "Lesson 138",
+        "file": "lessons/Private Pilot V2/Lesson 138.pdf",
+        "hint": "SOLO: Solo Cross Country"
+      },
+      {
+        "name": "Lesson 139",
+        "file": "lessons/Private Pilot V2/Lesson 139.pdf",
+        "hint": "SOLO: Solo Cross Country (3 Point)"
+      },
+      {
+        "name": "Lesson 140",
+        "file": "lessons/Private Pilot V2/Lesson 140.pdf",
+        "hint": "GROUND: Stage 3 Ground (Find Weak Areas)"
+      },
+      {
+        "name": "Lesson 141",
+        "file": "lessons/Private Pilot V2/Lesson 141.pdf",
+        "hint": "FLIGHT: Stage 3 Dual (Find Weak Areas)"
+      },
+      {
+        "name": "Lesson 142",
+        "file": "lessons/Private Pilot V2/Lesson 142.pdf",
+        "hint": "GROUND: Stage 3 Ground (Treat as Mock)"
+      },
+      {
+        "name": "Lesson 143",
+        "file": "lessons/Private Pilot V2/Lesson 143.pdf",
+        "hint": "SOLO: Stage 3 Solo (Work on Weak Areas)"
+      },
+      {
+        "name": "Lesson 144",
+        "file": "lessons/Private Pilot V2/Lesson 144.pdf",
+        "hint": "FLIGHT: Stage 3 Dual (Treat as Mock)"
+      },
+      {
+        "name": "Lesson 145a",
+        "file": "lessons/Private Pilot V2/Lesson 145a.pdf",
+        "hint": "GROUND: EOC Mock"
+      },
+      {
+        "name": "Lesson 145b",
+        "file": "lessons/Private Pilot V2/Lesson 145b.pdf",
+        "hint": "FLIGHT: EOC Mock"
+      }
     ]
   },
   "Private Pilot (V5)": {
     "__hint": "Flight 1 (V5)",
     "lessons": [
-      { "name": "ILS Approach", "file": "lessons/Private Pilot V5/ILS Approach.pdf", "hint": "" },
-      { "name": "VOR Approach", "file": "lessons/Private Pilot V5/VOR Approach.pdf", "hint": "" },
-      { "name": "RNAV Approach", "file": "lessons/Private Pilot V5/RNAV Approach.pdf", "hint": "" },
-      { "name": "Holding Patterns", "file": "lessons/Private Pilot V5/Holding Patterns.pdf", "hint": "" }
+      {
+        "name": "Lesson 101",
+        "file": "lessons/Private Pilot V5/Lesson 101.pdf",
+        "hint": "GROUND: Introduction and FOM"
+      },
+      {
+        "name": "Lesson 102",
+        "file": "lessons/Private Pilot V5/Lesson 102.pdf",
+        "hint": "GROUND: Preflight Planning"
+      },
+      {
+        "name": "Lesson 103",
+        "file": "lessons/Private Pilot V5/Lesson 103.pdf",
+        "hint": "GROUND: Checklists and Preflight Inspection"
+      },
+      {
+        "name": "Lesson 104",
+        "file": "lessons/Private Pilot V5/Lesson 104.pdf",
+        "hint": "SIM: Primary and Secondary Flight Controls"
+      },
+      {
+        "name": "Lesson 105",
+        "file": "lessons/Private Pilot V5/Lesson 105.pdf",
+        "hint": "FLIGHT: Primary and Secondary Flight Controls"
+      },
+      {
+        "name": "Lesson 106",
+        "file": "lessons/Private Pilot V5/Lesson 106.pdf",
+        "hint": "GROUND: Principles of Flight"
+      },
+      {
+        "name": "Lesson 107",
+        "file": "lessons/Private Pilot V5/Lesson 107.pdf",
+        "hint": "SIM: Taxiing, Straight and Level"
+      },
+      {
+        "name": "Lesson 108",
+        "file": "lessons/Private Pilot V5/Lesson 108.pdf",
+        "hint": "FLIGHT: 106 + Tracking Along a Road"
+      },
+      {
+        "name": "Lesson 109",
+        "file": "lessons/Private Pilot V5/Lesson 109.pdf",
+        "hint": "GROUND: Systems"
+      },
+      {
+        "name": "Lesson 110",
+        "file": "lessons/Private Pilot V5/Lesson 110.pdf",
+        "hint": "SIM: Climbs, Descents, and Turns"
+      },
+      {
+        "name": "Lesson 111",
+        "file": "lessons/Private Pilot V5/Lesson 111.pdf",
+        "hint": "FLIGHT: Climbs, Descents, and Turns"
+      },
+      {
+        "name": "Lesson 112",
+        "file": "lessons/Private Pilot V5/Lesson 112.pdf",
+        "hint": "GROUND: Manuevers"
+      },
+      {
+        "name": "Lesson 113",
+        "file": "lessons/Private Pilot V5/Lesson 113.pdf",
+        "hint": "FLIGHT: Slow Flight and Stall Introduction"
+      },
+      {
+        "name": "Lesson 114",
+        "file": "lessons/Private Pilot V5/Lesson 114.pdf",
+        "hint": "FLIGHT: Takeoffs and Ground Reference Manuevers"
+      },
+      {
+        "name": "Lesson 115",
+        "file": "lessons/Private Pilot V5/Lesson 115.pdf",
+        "hint": "FLIGHT: Landings"
+      },
+      {
+        "name": "Lesson 116",
+        "file": "lessons/Private Pilot V5/Lesson 116.pdf",
+        "hint": "GROUND: Stage 1 Ground"
+      },
+      {
+        "name": "Lesson 117",
+        "file": "lessons/Private Pilot V5/Lesson 117.pdf",
+        "hint": "FLIGHT: Forward Slips, Emergency Procedures, Non-Towered Ops"
+      },
+      {
+        "name": "Lesson 118",
+        "file": "lessons/Private Pilot V5/Lesson 118.pdf",
+        "hint": "FLIGHT: Emergencies + Ground Reference Manuever Proficiency"
+      },
+      {
+        "name": "Lesson 119",
+        "file": "lessons/Private Pilot V5/Lesson 119.pdf",
+        "hint": "FLIGHT: Slow Flight and Stall Proficiency"
+      },
+      {
+        "name": "Lesson 120",
+        "file": "lessons/Private Pilot V5/Lesson 120.pdf",
+        "hint": "FLIGHT: No Flap + Power Off Landing"
+      },
+      {
+        "name": "Lesson 124",
+        "file": "lessons/Private Pilot V5/Lesson 124.pdf",
+        "hint": "FLIGHT: Dual Solo"
+      },
+      {
+        "name": "Lesson 125",
+        "file": "lessons/Private Pilot V5/Lesson 125.pdf",
+        "hint": "FLIGHT: Dual Solo"
+      },
+      {
+        "name": "Lesson 126",
+        "file": "lessons/Private Pilot V5/Lesson 126.pdf",
+        "hint": "SOLO: Pattern Solo"
+      },
+      {
+        "name": "Lesson 127",
+        "file": "lessons/Private Pilot V5/Lesson 127.pdf",
+        "hint": "GROUND: Short/Soft-Field Departure and Landings, Steep Turns, Emergency Descent, and BAI"
+      },
+      {
+        "name": "Lesson 128",
+        "file": "lessons/Private Pilot V5/Lesson 128.pdf",
+        "hint": "FLIGHT: Short/Soft-Field Departure and Landings, Steep Turns, and Emergency Descent"
+      },
+      {
+        "name": "Lesson 129",
+        "file": "lessons/Private Pilot V5/Lesson 129.pdf",
+        "hint": "SIM: BAI, VORs, Unusual Attitudes"
+      },
+      {
+        "name": "Lesson 130",
+        "file": "lessons/Private Pilot V5/Lesson 130.pdf",
+        "hint": "FLIGHT: BAI, VORs, Unusual Attitudes"
+      },
+      {
+        "name": "Lesson 131",
+        "file": "lessons/Private Pilot V5/Lesson 131.pdf",
+        "hint": "GROUND: Weather, Airspace, Cross Countries"
+      },
+      {
+        "name": "Lesson 132",
+        "file": "lessons/Private Pilot V5/Lesson 132.pdf",
+        "hint": "FLIGHT: First Cross Country"
+      },
+      {
+        "name": "Lesson 133",
+        "file": "lessons/Private Pilot V5/Lesson 133.pdf",
+        "hint": "FLIGHT: Cross Country to Non-Towered"
+      },
+      {
+        "name": "Lesson 134",
+        "file": "lessons/Private Pilot V5/Lesson 134.pdf",
+        "hint": "FLIGHT: Cross Country to Towered (3 Point)"
+      },
+      {
+        "name": "Lesson 135",
+        "file": "lessons/Private Pilot V5/Lesson 135.pdf",
+        "hint": "SOLO: Local Solo"
+      },
+      {
+        "name": "Lesson 136",
+        "file": "lessons/Private Pilot V5/Lesson 136.pdf",
+        "hint": "SOLO: Local Solo"
+      },
+      {
+        "name": "Lesson 137",
+        "file": "lessons/Private Pilot V5/Lesson 137.pdf",
+        "hint": "GROUND: Aeromedical + Night Ops"
+      },
+      {
+        "name": "Lesson 138",
+        "file": "lessons/Private Pilot V5/Lesson 138.pdf",
+        "hint": "FLIGHT: Night Dual (10 Landings)"
+      },
+      {
+        "name": "Lesson 139",
+        "file": "lessons/Private Pilot V5/Lesson 139.pdf",
+        "hint": "FLIGHT: Night Cross Country"
+      },
+      {
+        "name": "Lesson 142",
+        "file": "lessons/Private Pilot V5/Lesson 142.pdf",
+        "hint": "SOLO: Solo Cross Country"
+      },
+      {
+        "name": "Lesson 143",
+        "file": "lessons/Private Pilot V5/Lesson 143.pdf",
+        "hint": "SOLO: Solo Cross Country (3 Point)"
+      },
+      {
+        "name": "Lesson 144",
+        "file": "lessons/Private Pilot V5/Lesson 144.pdf",
+        "hint": "GROUND: Stage 3 Ground (Find Weak Areas)"
+      },
+      {
+        "name": "Lesson 145",
+        "file": "lessons/Private Pilot V5/Lesson 145.pdf",
+        "hint": "FLIGHT: Stage 3 Dual (Find Weak Areas)"
+      },
+      {
+        "name": "Lesson 146",
+        "file": "lessons/Private Pilot V5/Lesson 146.pdf",
+        "hint": "GROUND: Stage 3 Ground (Treat as Mock)"
+      },
+      {
+        "name": "Lesson 147",
+        "file": "lessons/Private Pilot V5/Lesson 147.pdf",
+        "hint": "SOLO: Stage 3 Solo (Work on Weak Areas)"
+      },
+      {
+        "name": "Lesson 148",
+        "file": "lessons/Private Pilot V5/Lesson 148.pdf",
+        "hint": "FLIGHT: Stage 3 Dual (Treat as Mock)"
+      },
+      {
+        "name": "Lesson 149a",
+        "file": "lessons/Private Pilot V5/Lesson 149a.pdf",
+        "hint": "GROUND: EOC Mock"
+      },
+      {
+        "name": "Lesson 149b",
+        "file": "lessons/Private Pilot V5/Lesson 149b.pdf",
+        "hint": "FLIGHT: EOC Mock"
+      }
+    ]
+  },
+   "Instrument": {
+    "__hint": "Flight 3",
+    "lessons": [
+      {
+        "name": "Lesson 301",
+        "file": "lessons/Instrument/Lesson 301.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 302",
+        "file": "lessons/Instrument/Lesson 302.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 303",
+        "file": "lessons/Instrument/Lesson 303.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 304",
+        "file": "lessons/Instrument/Lesson 304.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 305",
+        "file": "lessons/Instrument/Lesson 305.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 306",
+        "file": "lessons/Instrument/Lesson 306.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 307",
+        "file": "lessons/Instrument/Lesson 307.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 308",
+        "file": "lessons/Instrument/Lesson 308.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 309",
+        "file": "lessons/Instrument/Lesson 309.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 310",
+        "file": "lessons/Instrument/Lesson 310.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 311",
+        "file": "lessons/Instrument/Lesson 311.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 312a",
+        "file": "lessons/Instrument/Lesson 312a.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 312b",
+        "file": "lessons/Instrument/Lesson 312b.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 314",
+        "file": "lessons/Instrument/Lesson 314.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 315",
+        "file": "lessons/Instrument/Lesson 315.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 316",
+        "file": "lessons/Instrument/Lesson 316.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 317",
+        "file": "lessons/Instrument/Lesson 317.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 318",
+        "file": "lessons/Instrument/Lesson 318.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 319",
+        "file": "lessons/Instrument/Lesson 319.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 320",
+        "file": "lessons/Instrument/Lesson 320.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 321",
+        "file": "lessons/Instrument/Lesson 321.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 322",
+        "file": "lessons/Instrument/Lesson 322.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 323",
+        "file": "lessons/Instrument/Lesson 323.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 324",
+        "file": "lessons/Instrument/Lesson 324.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 325",
+        "file": "lessons/Instrument/Lesson 325.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 326",
+        "file": "lessons/Instrument/Lesson 326.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 327",
+        "file": "lessons/Instrument/Lesson 327.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 328",
+        "file": "lessons/Instrument/Lesson 328.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 329",
+        "file": "lessons/Instrument/Lesson 329.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 330",
+        "file": "lessons/Instrument/Lesson 330.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 331a",
+        "file": "lessons/Instrument/Lesson 331a.pdf",
+        "hint": ""
+      },
+      {
+        "name": "Lesson 331b",
+        "file": "lessons/Instrument/Lesson 331b.pdf",
+        "hint": ""
+      }
     ]
   },
   "Commercial Pilot": {
     "__hint": "Flight 2 and 4",
     "lessons": [
-      { "name": "Commercial 2 IP Guide", "file": "lessons/Commercial Pilot/Commercial 2 IP Guide.pdf", "hint": "Scenarios for Sim Lessons" }
+      {
+        "name": "Commercial 2 IP Guide",
+        "file": "lessons/Commercial Pilot/Commercial 2 IP Guide.pdf",
+        "hint": "Scenarios for Sim Lessons"
+      }
     ]
   }
 }
