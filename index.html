@@ -261,6 +261,19 @@ nav { background: var(--sky); padding: 0 1rem; height: 52px; display: flex; alig
 
   <div class="status-bar" id="wb-status"></div>
 
+  <div class="section-card" style="margin:0 1.25rem 12px;">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>Select Aircraft</span>
+      <span id="fleet-updated" style="font-size:10px;font-weight:400;opacity:0.75;"></span>
+    </div>
+    <div style="padding:10px 12px;">
+      <select id="ac-select" onchange="loadFleetAC()"
+        style="width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);outline:none;cursor:pointer;">
+        <option value="">— Select aircraft —</option>
+      </select>
+    </div>
+  </div>
+
   <div class="section-card">
     <div class="section-title">Weight &amp; Balance</div>
     <table class="wb-table">
@@ -753,6 +766,9 @@ function switchAC(id, btn) {
   document.getElementById('wb-status').className = 'status-bar';
   drawEnvelope(null, null, null, null);
   calcTOLD();
+  populateFleetDropdown();
+  const sel = document.getElementById('ac-select');
+  if (sel) sel.value = '';
 }
 
 function setDefaults(id) {
@@ -2151,11 +2167,61 @@ function initIFR() {
   if (document.getElementById('ifr-rows').children.length === 0) addIFRRow();
 }
 
+// ════════════════════════════════
+// FLEET AIRCRAFT SELECTOR
+// ════════════════════════════════
+let fleetData = {};
+
+async function loadFleetData() {
+  try {
+    const r = await fetch('fleet.json');
+    if (!r.ok) throw new Error('not found');
+    fleetData = await r.json();
+    const updatedEl = document.getElementById('fleet-updated');
+    if (updatedEl && fleetData.effectiveDate) {
+      updatedEl.textContent = 'Last Updated: ' + fleetData.effectiveDate;
+    }
+    populateFleetDropdown();
+  } catch(e) {
+    // fleet.json not found — dropdown stays empty
+  }
+}
+
+function populateFleetDropdown() {
+  const sel = document.getElementById('ac-select');
+  if (!sel) return;
+  // Clear existing options except the placeholder
+  sel.innerHTML = '<option value="">— Select aircraft —</option>';
+  const acList = curAC === 'warrior'
+    ? (fleetData.warrior || [])
+    : (fleetData.archer || []);
+  acList.forEach(ac => {
+    const opt = document.createElement('option');
+    opt.value = ac.reg;
+    opt.textContent = ac.reg + ' — ' + ac.callSign;
+    opt.dataset.bew = ac.bew;
+    opt.dataset.bea = ac.bea;
+    opt.dataset.bem = ac.bem;
+    sel.appendChild(opt);
+  });
+}
+
+function loadFleetAC() {
+  const sel = document.getElementById('ac-select');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) return;
+  document.getElementById('w0').value = opt.dataset.bew;
+  document.getElementById('a0').value = opt.dataset.bea;
+  document.getElementById('m0').value = opt.dataset.bem;
+  calc();
+}
+
 setDefaults('warrior');
 drawEnvelope(null, null, null, null);
 loadManifest();
 fetchHomeMetar();
 setInterval(fetchHomeMetar, 30000);
+loadFleetData();
 </script>
 </body>
 </html>
