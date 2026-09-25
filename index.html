@@ -1869,7 +1869,7 @@ async function fetchWX(icao) {
   const metarHoursParam = hours === 0 ? 0 : hours;
   // Use the sep=true format confirmed working; hours=0 returns most recent only
   const metarUrl = `https://aviationweather.gov/api/data/metar?ids=${icao}&hours=${metarHoursParam}&sep=true`;
-  const tafUrl   = `https://aviationweather.gov/api/data/taf?ids=${icao}&hours=0&sep=true`;
+  const tafUrl   = `https://aviationweather.gov/api/data/taf?ids=${icao}`;
 
   try {
     // Fetch sequentially to avoid parallel CORS connection issues
