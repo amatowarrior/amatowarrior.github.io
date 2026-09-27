@@ -1575,10 +1575,17 @@ setInterval(updateZulu, 5000);
 // METAR / TAF
 // ════════════════════════════════
 async function corsFetch(url) {
-  try { const r = await fetch(url); if (r.ok) return await r.text(); } catch(e) {}
-  try { const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(url)); if (r.ok) return await r.text(); } catch(e) {}
-  try { const r = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url)); if (r.ok) return await r.text(); } catch(e) {}
-  throw new Error('All fetch methods failed');
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const r = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (r.ok) return await r.text();
+    throw new Error('HTTP ' + r.status);
+  } catch(e) {
+    clearTimeout(timeout);
+    throw e;
+  }
 }
 
 function flightCatStyle(cat) {
