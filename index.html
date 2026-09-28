@@ -1585,6 +1585,7 @@ async function corsFetch(url) {
       throw new Error('HTTP ' + r.status);
     } catch(e) {
       clearTimeout(timeout);
+      if (e.name === 'AbortError') throw new Error('Request timed out');
       throw e;
     }
   }
