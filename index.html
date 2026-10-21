@@ -1575,26 +1575,18 @@ setInterval(updateZulu, 5000);
 // METAR / TAF
 // ════════════════════════════════
 async function corsFetch(url) {
-  async function attempt(fetchUrl) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-    try {
-      const r = await fetch(fetchUrl, { signal: controller.signal });
-      clearTimeout(timeout);
-      if (r.ok) return await r.text();
-      throw new Error('HTTP ' + r.status);
-    } catch(e) {
-      clearTimeout(timeout);
-      if (e.name === 'AbortError') throw new Error('Request timed out');
-      throw e;
-    }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const r = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (r.ok) return await r.text();
+    throw new Error('HTTP ' + r.status);
+  } catch(e) {
+    clearTimeout(timeout);
+    if (e.name === 'AbortError') throw new Error('Request timed out');
+    throw e;
   }
-  // 1. Direct (works if server sends CORS headers)
-  try { return await attempt(url); } catch(e) {}
-  // 2. corsproxy.io fallback
-  try { return await attempt('https://corsproxy.io/?' + encodeURIComponent(url)); } catch(e) {}
-  // 3. allorigins fallback
-  return await attempt('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
 }
 
 function flightCatStyle(cat) {
@@ -1875,76 +1867,59 @@ async function fetchWX(icao) {
     document.getElementById('wx-metar-raw').textContent = 'Fetching…';
     document.getElementById('wx-taf-raw').textContent   = 'Fetching…';
   }
-  // Show spinners
   document.getElementById('wx-spinner').style.display     = 'inline';
   document.getElementById('wx-taf-spinner').style.display = 'inline';
   document.getElementById('wx-error').style.display = 'none';
 
   const hoursEl = document.getElementById('wx-metar-hours');
   const hours = hoursEl ? parseInt(hoursEl.value) : 0;
-  const metarHoursParam = hours === 0 ? 0 : hours;
-  // Use the sep=true format confirmed working; hours=0 returns most recent only
-  const metarUrl = `https://aviationweather.gov/api/data/metar?ids=${icao}&hours=${metarHoursParam}&sep=true`;
-  const tafUrl   = `https://aviationweather.gov/api/data/taf?ids=${icao}`;
+  const hoursParam = hours === 0 ? 0 : hours;
+  // Single endpoint returns both rawOb (METAR) and rawTaf (TAF) together
+  const url = `https://aviationweather.gov/api/data/metar?ids=${icao}&taf=true&format=json&hours=${hoursParam}`;
 
   try {
-    // Fetch sequentially to avoid parallel CORS connection issues
-    let metarRaw = '', tafRaw = '', metarErr = null, tafErr = null;
-    try { metarRaw = await corsFetch(metarUrl); } catch(e) { metarErr = e; }
-    try { tafRaw   = await corsFetch(tafUrl);   } catch(e) { tafErr   = e; }
+    const jsonText = await corsFetch(url);
+    const data = JSON.parse(jsonText);
 
-    const metarResult = metarErr
-      ? { status: 'rejected', reason: metarErr }
-      : { status: 'fulfilled', value: metarRaw };
-    const tafResult = tafErr
-      ? { status: 'rejected', reason: tafErr }
-      : { status: 'fulfilled', value: tafRaw };
+    if (!data || data.length === 0) throw new Error('No data found for ' + icao);
+
+    // Most recent is first entry
+    const obs = data[0];
+    const metarText = obs.rawOb || '';
+    const tafText   = obs.rawTaf || '';
 
     // --- METAR ---
-    let metarText = metarResult.status === 'fulfilled' ? metarResult.value.trim() : '';
-    // sep=true returns one METAR per line; for Most Recent just take first line
-    if (metarText && hours === 0) metarText = metarText.split('\n')[0].trim();
-
     if (metarText) {
       document.getElementById('wx-metar-raw').textContent = metarText;
-      // Keep home page METAR in sync when fetching KMLB
       if (icao === 'KMLB') {
         const homeEl = document.getElementById('home-metar-raw');
-        if (homeEl) homeEl.textContent = metarText.split('\n')[0].trim();
+        if (homeEl) homeEl.textContent = metarText;
       }
-      // Flight category badge
-      const cat = deriveFltCat(metarText);
+      // Use flight category from API directly
+      const cat = obs.fltCat || deriveFltCat(metarText);
       const cs = flightCatStyle(cat);
       const badge = document.getElementById('wx-fltcat');
       badge.textContent = cs.label;
       badge.className = 'fltcat-badge ' + cs.cls;
       badge.style.display = 'inline-block';
     } else {
-      document.getElementById('wx-metar-raw').textContent =
-        metarResult.status === 'rejected' ? 'Error: ' + metarResult.reason.message : 'No METAR found for ' + icao;
+      document.getElementById('wx-metar-raw').textContent = 'No METAR found for ' + icao;
       document.getElementById('wx-fltcat').style.display = 'none';
     }
 
     // --- TAF ---
-    const tafText = tafResult.status === 'fulfilled' ? tafResult.value.trim() : '';
     if (tafText) {
-      document.getElementById('wx-taf-raw').textContent = tafText;
-      renderTafDecoded(tafText);
+      const tafFormatted = tafText.replace(/\s+(FM\d{6}|TEMPO|BECMG|PROB\d{2}|RMK)\s+/g, '\n  $1 ');
+      document.getElementById('wx-taf-raw').textContent = tafFormatted;
+      renderTafDecoded(tafFormatted);
     } else {
-      document.getElementById('wx-taf-raw').textContent =
-        tafResult.status === 'rejected' ? 'Error: ' + tafResult.reason.message : 'No TAF found for ' + icao;
+      document.getElementById('wx-taf-raw').textContent = 'No TAF found for ' + icao;
       document.getElementById('wx-taf-decoded-card').style.display = 'none';
     }
 
-    // --- METAR age ---
-    const metarTsMatch = metarText.match(/\d{6}Z/);
-    if (metarTsMatch) {
-      const dd = parseInt(metarTsMatch[0].slice(0,2));
-      const hh = parseInt(metarTsMatch[0].slice(2,4));
-      const mm2 = parseInt(metarTsMatch[0].slice(4,6));
-      const now = new Date();
-      const obs = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), dd, hh, mm2));
-      const diff = Math.round((Date.now() - obs) / 60000);
+    // --- METAR age from reportTime ---
+    if (obs.reportTime) {
+      const diff = Math.round((Date.now() - new Date(obs.reportTime)) / 60000);
       if (diff >= 0 && diff < 600) {
         const ageEl = document.getElementById('wx-metar-age');
         ageEl.textContent = diff + ' min ago';
@@ -1953,7 +1928,7 @@ async function fetchWX(icao) {
       }
     }
 
-    // --- TAF age ---
+    // --- TAF age from timestamp in rawTaf ---
     if (tafText) {
       const tafTsMatch = tafText.match(/\d{6}Z/);
       if (tafTsMatch) {
@@ -1991,17 +1966,16 @@ async function fetchWX(icao) {
     document.getElementById('wx-taf-spinner').style.display = 'none';
   }
 
-  // Reset 30s auto-refresh on every manual fetch
   if (wxRefreshInterval) clearInterval(wxRefreshInterval);
   wxRefreshInterval = setInterval(() => fetchWX(document.getElementById('wx-icao').value || 'KMLB'), 30000);
 }
 
 async function fetchHomeMetar() {
   try {
-    const text = await corsFetch('https://aviationweather.gov/api/data/metar?ids=KMLB&hours=0&sep=true');
-    const raw = text.trim().split('\n')[0].trim();
+    const jsonText = await corsFetch('https://aviationweather.gov/api/data/metar?ids=KMLB&taf=false&format=json&hours=0');
+    const data = JSON.parse(jsonText);
     const el = document.getElementById('home-metar-raw');
-    if (el && raw) el.textContent = raw;
+    if (el && data && data[0] && data[0].rawOb) el.textContent = data[0].rawOb;
   } catch(e) {
     const el = document.getElementById('home-metar-raw');
     if (el) el.textContent = 'KMLB weather unavailable';
