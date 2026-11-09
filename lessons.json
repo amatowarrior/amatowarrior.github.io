@@ -470,22 +470,22 @@
       {
         "name": "Lesson 302",
         "file": "lessons/Instrument/Lesson 302.pdf",
-        "hint": "🖥 Instrument Cockpit Check + BAI"
+        "hint": "🖥️ Instrument Cockpit Check + BAI"
       },
       {
         "name": "Lesson 303",
         "file": "lessons/Instrument/Lesson 303.pdf",
-        "hint": "🖥 Introduction to Partial Panel, BAI, Compass Turns"
+        "hint": "🖥️ Introduction to Partial Panel, BAI, Compass Turns"
       },
       {
         "name": "Lesson 304",
         "file": "lessons/Instrument/Lesson 304.pdf",
-        "hint": "🖥 Expanding on Partial Panel"
+        "hint": "🖥️ Expanding on Partial Panel"
       },
       {
         "name": "Lesson 305",
         "file": "lessons/Instrument/Lesson 305.pdf",
-        "hint": "✈ BAI"
+        "hint": "✈️ BAI"
       },
       {
         "name": "Lesson 306",
@@ -495,27 +495,27 @@
       {
         "name": "Lesson 307",
         "file": "lessons/Instrument/Lesson 307.pdf",
-        "hint": "🖥 Intercepting and Tracking + DME Arcs"
+        "hint": "🖥️ Intercepting and Tracking + DME Arcs"
       },
       {
         "name": "Lesson 308",
         "file": "lessons/Instrument/Lesson 308.pdf",
-        "hint": "🖥 Intercepting and Tracking + DME Arc Proficiency"
+        "hint": "🖥️ Intercepting and Tracking + DME Arc Proficiency"
       },
       {
         "name": "Lesson 309",
         "file": "lessons/Instrument/Lesson 309.pdf",
-        "hint": "🖥 Intercepting and Tracking + DME Arc Proficiency (Backcourse)"
+        "hint": "🖥️ Intercepting and Tracking + DME Arc Proficiency (Backcourse)"
       },
       {
         "name": "Lesson 310",
         "file": "lessons/Instrument/Lesson 310.pdf",
-        "hint": "✈ Intercepting and Tracking + DME Arcs"
+        "hint": "✈️ Intercepting and Tracking + DME Arcs"
       },
       {
         "name": "Lesson 311",
         "file": "lessons/Instrument/Lesson 311.pdf",
-        "hint": "✈ Intercepting and Tracking + DME Arc Proficiency"
+        "hint": "✈️ Intercepting and Tracking + DME Arc Proficiency"
       },
       {
         "name": "Lesson 312a",
@@ -525,7 +525,7 @@
       {
         "name": "Lesson 312b",
         "file": "lessons/Instrument/Lesson 312b.pdf",
-        "hint": "✈ Stage 1 Mock"
+        "hint": "✈️ Stage 1 Mock"
       },
       {
         "name": "Lesson 314",
@@ -535,17 +535,17 @@
       {
         "name": "Lesson 315",
         "file": "lessons/Instrument/Lesson 315.pdf",
-        "hint": "🖥 Holding Procedures (VOR + Localizer)"
+        "hint": "🖥️ Holding Procedures (VOR + Localizer)"
       },
       {
         "name": "Lesson 316",
         "file": "lessons/Instrument/Lesson 316.pdf",
-        "hint": "🖥 Holding Procedures (GPS + Radial)"
+        "hint": "🖥️ Holding Procedures (GPS + Radial)"
       },
       {
         "name": "Lesson 317",
         "file": "lessons/Instrument/Lesson 317.pdf",
-        "hint": "✈ Holding Procedures"
+        "hint": "✈️ Holding Procedures"
       },
       {
         "name": "Lesson 318",
@@ -555,17 +555,17 @@
       {
         "name": "Lesson 319",
         "file": "lessons/Instrument/Lesson 319.pdf",
-        "hint": "🖥 VOR+ILS Approaches"
+        "hint": "🖥️ VOR+ILS Approaches"
       },
       {
         "name": "Lesson 320",
         "file": "lessons/Instrument/Lesson 320.pdf",
-        "hint": "🖥 Backcourse + GPS Approaches"
+        "hint": "🖥️ Backcourse + GPS Approaches"
       },
       {
         "name": "Lesson 321",
         "file": "lessons/Instrument/Lesson 321.pdf",
-        "hint": "✈ Approaches"
+        "hint": "✈️ Approaches"
       },
       {
         "name": "Lesson 322",
@@ -575,12 +575,12 @@
       {
         "name": "Lesson 323",
         "file": "lessons/Instrument/Lesson 323.pdf",
-        "hint": "✈ Approaches"
+        "hint": "✈️ Approaches"
       },
       {
         "name": "Lesson 324",
         "file": "lessons/Instrument/Lesson 324.pdf",
-        "hint": "✈ Partial Panel Approaches"
+        "hint": "✈️ Partial Panel Approaches"
       },
       {
         "name": "Lesson 325",
@@ -590,17 +590,17 @@
       {
         "name": "Lesson 326",
         "file": "lessons/Instrument/Lesson 326.pdf",
-        "hint": "✈ IFR Cross Country"
+        "hint": "✈️ IFR Cross Country"
       },
       {
         "name": "Lesson 327",
         "file": "lessons/Instrument/Lesson 327.pdf",
-        "hint": "✈ IFR Cross Country 2"
+        "hint": "✈️ IFR Cross Country 2"
       },
       {
         "name": "Lesson 328",
         "file": "lessons/Instrument/Lesson 328.pdf",
-        "hint": "✈ IFR Cross Country 3 (250nm, 100nm straight line, 3 types of approaches)"
+        "hint": "✈️ IFR Cross Country 3 (250nm, 100nm straight line, 3 types of approaches)"
       },
       {
         "name": "Lesson 329",
@@ -610,7 +610,7 @@
       {
         "name": "Lesson 330",
         "file": "lessons/Instrument/Lesson 330.pdf",
-        "hint": "✈ Stage 2 Mock Preparation"
+        "hint": "✈️ Stage 2 Mock Preparation"
       },
       {
         "name": "Lesson 331a",
@@ -620,7 +620,7 @@
       {
         "name": "Lesson 331b",
         "file": "lessons/Instrument/Lesson 331b.pdf",
-        "hint": "✈ Stage 2 Mock"
+        "hint": "✈️ Stage 2 Mock"
       }
     ]
   },
