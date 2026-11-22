@@ -6,7 +6,8 @@
 <title>Photo Frame</title>
 <style>
   :root{--bg:#000;--fg:#e9e7e2;--dim:#9a978f;--accent:#8fb8c9}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:28px/1.4 "Segoe UI",system-ui,sans-serif;overflow:hidden;cursor:none}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:28px/1.4 "Segoe UI",system-ui,sans-serif;overflow:hidden}
+  body.idle,body.idle *{cursor:none}
   .layer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1.2s ease}
   .layer.on{opacity:1}
   #panel{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;padding:40px;background:var(--bg)}
@@ -15,16 +16,26 @@
   p{margin:0;max-width:760px;color:var(--dim)}
   #qr{background:#fff;padding:14px;border-radius:6px}
   #qr:empty{display:none}
-  button{font:inherit;color:var(--fg);background:none;border:2px solid var(--accent);border-radius:6px;padding:12px 34px}
+  #row,#bar{display:flex;flex-wrap:wrap;justify-content:center;gap:16px}
+  button{font:inherit;color:var(--fg);background:none;border:2px solid var(--accent);border-radius:6px;padding:12px 30px}
   button:focus{outline:none;background:var(--accent);color:#000}
-  #hud{position:absolute;bottom:28px;left:0;right:0;z-index:4;text-align:center;font-size:24px;opacity:0;transition:opacity .4s;text-shadow:0 0 10px #000}
+  #bar{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);z-index:4;background:rgba(0,0,0,.7);padding:18px 24px;border-radius:12px;visibility:hidden;opacity:0;transition:opacity .3s}
+  #bar.on{visibility:visible;opacity:1}
+  #hud{position:absolute;top:28px;left:0;right:0;z-index:4;text-align:center;font-size:24px;opacity:0;transition:opacity .4s;text-shadow:0 0 10px #000}
   #hud.on{opacity:1}
 </style>
 </head>
 <body>
 <img id="a" class="layer" alt=""><img id="b" class="layer" alt="">
 <div id="hud"></div>
-<div id="panel"><h1 id="t"></h1><p id="m"></p><div id="qr"></div><button id="btn"></button></div>
+<div id="bar">
+  <button id="prev">Previous</button>
+  <button id="pp">Pause</button>
+  <button id="next">Next</button>
+  <button id="sh">Shuffle: On</button>
+  <button id="pick">Choose photos</button>
+</div>
+<div id="panel"><h1 id="t"></h1><p id="m"></p><div id="qr"></div><div id="row"></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 // ---- Settings ----
@@ -39,21 +50,43 @@ const ls = {
   set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} },
   del: k => { try { localStorage.removeItem(k); } catch (e) {} }
 };
-let token, items = [], order = [], idx = 0, front = 0, timer, running = false, paused = false;
+let token, items = [], order = [], idx = 0, front = 0, timer, barTimer, running = false, paused = false;
 let shuffle = ls.get('shuffle') !== '0', lock, fallback, pickToken = 0;
 const cache = new Map();
 
-function setPanel(title, msg, label, fn, qrUrl) {
+// ---- Panel, bar and messages ----
+function setPanel(title, msg, buttons, qrUrl) {
+  running = false; clearTimeout(timer); hideBar();
+  document.body.classList.remove('idle');
   $('t').textContent = title; $('m').textContent = msg;
   $('qr').innerHTML = '';
   if (qrUrl) new QRCode($('qr'), { text: qrUrl, width: 300, height: 300 });
-  const b = $('btn'); b.style.display = label ? '' : 'none';
-  if (label) { b.textContent = label; b.onclick = fn; b.focus(); }
+  const row = $('row'); row.innerHTML = '';
+  (buttons || []).forEach(([label, fn]) => {
+    const b = document.createElement('button'); b.textContent = label; b.onclick = fn; row.appendChild(b);
+  });
   $('panel').classList.remove('hide');
+  if (row.firstChild) row.firstChild.focus();
 }
 function hud(text) {
   const h = $('hud'); h.textContent = text; h.classList.add('on');
-  clearTimeout(hud.t); hud.t = setTimeout(() => h.classList.remove('on'), 2500);
+  clearTimeout(hud.t); hud.t = setTimeout(() => h.classList.remove('on'), 2000);
+}
+function updateBar() {
+  $('pp').textContent = paused ? 'Play' : 'Pause';
+  $('sh').textContent = 'Shuffle: ' + (shuffle ? 'On' : 'Off');
+}
+function showBar() {
+  const bar = $('bar'); updateBar();
+  bar.classList.add('on'); document.body.classList.remove('idle');
+  if (!bar.contains(document.activeElement)) $('pp').focus();
+  clearTimeout(barTimer); barTimer = setTimeout(hideBar, 6000);
+}
+function hideBar() {
+  clearTimeout(barTimer);
+  $('bar').classList.remove('on');
+  if ($('bar').contains(document.activeElement)) document.activeElement.blur();
+  if (running) document.body.classList.add('idle');
 }
 
 // ---- Sign in (OAuth implicit flow by redirect) ----
@@ -78,7 +111,11 @@ function readHash() {
 async function api(path, opt = {}) {
   const r = await fetch(API + path, { ...opt, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' } });
   if (r.status === 401) { ls.del('token'); throw new Error('auth'); }
-  if (!r.ok) throw new Error('api ' + r.status);
+  if (!r.ok) {
+    let msg = 'Google returned ' + r.status;
+    try { const j = await r.json(); if (j.error && j.error.message) msg += ': ' + j.error.message; } catch (e) {}
+    throw new Error(msg);
+  }
   return r.json();
 }
 async function loadItems(sessionId) {
@@ -91,29 +128,38 @@ async function loadItems(sessionId) {
   return out;
 }
 async function startPick() {
-  const mine = ++pickToken; running = false; clearTimeout(timer);
+  const mine = ++pickToken;
   setPanel('Choose photos', 'Preparing…');
   try {
     const s = await api('/sessions', { method: 'POST', body: JSON.stringify({ pickingConfig: { maxItemCount: '2000' } }) });
     ls.set('session', s.id);
-    setPanel('Choose photos', 'Scan with your phone (same Google account), open your shared album, select the photos and tap Done.', null, null, s.pickerUri + '/autoclose');
+    setPanel('Choose photos', 'Scan with your phone (same Google account), open your shared album, select the photos and tap Done.', null, s.pickerUri + '/autoclose');
     const every = (parseFloat(s.pollingConfig && s.pollingConfig.pollInterval) || 5) * 1000;
     const until = Date.now() + (parseFloat(s.pollingConfig && s.pollingConfig.timeoutIn) || 600) * 1000;
     while (mine === pickToken && Date.now() < until) {
       await new Promise(r => setTimeout(r, every));
+      if (mine !== pickToken) return;
       const st = await api('/sessions/' + s.id);
       if (st.mediaItemsSet) {
         items = await loadItems(s.id);
-        if (!items.length) return setPanel('No photos found', 'Your selection had no photos.', 'Choose again', startPick);
-        return play();
+        if (!items.length) return setPanel('No photos found', 'Your selection had no photos.', [['Choose again', startPick]]);
+        return showReady();
       }
     }
-    if (mine === pickToken) setPanel('Timed out', 'Nothing was selected.', 'Try again', startPick);
+    if (mine === pickToken) setPanel('Timed out', 'Nothing was selected.', [['Try again', startPick]]);
   } catch (e) { fail(e); }
 }
 function fail(e) {
-  if (e.message === 'auth') setPanel('Signed out', 'Sign in again to continue.', 'Sign in', () => signIn(false));
-  else setPanel('Something went wrong', String(e.message), 'Try again', startPick);
+  if (e.message === 'auth') setPanel('Signed out', 'Sign in again to continue.', [['Sign in', () => signIn(false)]]);
+  else setPanel('Something went wrong', e.message, [['Try again', startPick], ['Sign in again', () => signIn(false)]]);
+}
+function showReady() {
+  const label = () => 'Shuffle: ' + (shuffle ? 'On' : 'Off');
+  setPanel(items.length + ' photos ready', 'Start the slideshow, or change the shuffle setting first.', [
+    ['Start slideshow', play],
+    [label(), e => { shuffle = !shuffle; ls.set('shuffle', shuffle ? '1' : '0'); e.currentTarget.textContent = label(); }],
+    ['Choose different photos', startPick]
+  ]);
 }
 
 // ---- Slideshow ----
@@ -137,11 +183,14 @@ function buildOrder() {
 }
 function play() {
   $('panel').classList.add('hide'); running = true; paused = false;
-  buildOrder(); keepAwake(); step(1);
+  buildOrder(); keepAwake(); step(1); showBar();
 }
 async function step(d) {
   clearTimeout(timer);
-  idx = (idx + d + order.length) % order.length;
+  let next = idx + d;
+  if (next >= order.length) { if (shuffle) buildOrder(); next = 0; } // reshuffle each loop
+  if (next < 0) next = order.length - 1;
+  idx = next;
   try {
     const url = await getImg(idx);
     const imgs = [$('a'), $('b')]; front ^= 1;
@@ -150,8 +199,24 @@ async function step(d) {
     imgs[front].classList.add('on'); imgs[front ^ 1].classList.remove('on');
     getImg(idx + 1).catch(() => {});
   } catch (e) { if (e.message === 'auth') return fail(e); }
-  if (!paused) timer = setTimeout(() => step(1), SECONDS * 1000);
+  if (!paused && running) timer = setTimeout(() => step(1), SECONDS * 1000);
 }
+function go(d) { step(d); hud(d > 0 ? 'Next' : 'Previous'); }
+function togglePause() {
+  paused = !paused; clearTimeout(timer);
+  if (!paused) timer = setTimeout(() => step(1), SECONDS * 1000);
+  updateBar(); hud(paused ? 'Paused' : 'Playing');
+}
+function toggleShuffle() {
+  shuffle = !shuffle; ls.set('shuffle', shuffle ? '1' : '0');
+  const cur = order[idx]; buildOrder(); idx = Math.max(0, order.indexOf(cur));
+  updateBar(); hud(shuffle ? 'Shuffle on' : 'Shuffle off');
+}
+$('prev').onclick = () => go(-1);
+$('next').onclick = () => go(1);
+$('pp').onclick = togglePause;
+$('sh').onclick = toggleShuffle;
+$('pick').onclick = startPick;
 
 // ---- Keep the TV awake ----
 async function keepAwake() {
@@ -168,36 +233,41 @@ async function keepAwake() {
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && running) keepAwake(); });
 
-// ---- Remote control ----
+// ---- Remote, keyboard and pointer ----
 addEventListener('keydown', e => {
   if (!running) return;
-  const k = e.key; keepAwake();
-  if (k === 'ArrowRight' || k === 'MediaTrackNext' || k === 'MediaFastForward') { step(1); hud('Next'); }
-  else if (k === 'ArrowLeft' || k === 'MediaTrackPrevious' || k === 'MediaRewind') { step(-1); hud('Previous'); }
-  else if (k === 'Enter' || k === ' ' || k === 'MediaPlayPause' || k === 'MediaPlay' || k === 'MediaPause') {
-    paused = !paused; clearTimeout(timer); if (!paused) timer = setTimeout(() => step(1), SECONDS * 1000);
-    hud(paused ? 'Paused' : 'Playing');
-  } else if (k === 'ArrowUp') {
-    shuffle = !shuffle; ls.set('shuffle', shuffle ? '1' : '0');
-    const cur = order[idx]; buildOrder(); idx = order.indexOf(cur);
-    hud(shuffle ? 'Shuffle on' : 'Shuffle off');
-  } else if (k === 'ArrowDown') startPick();
-  else return;
+  keepAwake();
+  const k = e.key, barOn = $('bar').classList.contains('on');
+  if (k === 'Escape' || k === 'GoBack' || k === 'BrowserBack') { if (barOn) { hideBar(); e.preventDefault(); } return; }
+  if (k === 'MediaTrackNext' || k === 'MediaFastForward') go(1);
+  else if (k === 'MediaTrackPrevious' || k === 'MediaRewind') go(-1);
+  else if (k === 'MediaPlayPause' || k === 'MediaPlay' || k === 'MediaPause') togglePause();
+  else if (barOn && (k === 'Enter' || k === ' ')) { clearTimeout(barTimer); barTimer = setTimeout(hideBar, 6000); return; }
+  else if (barOn && (k === 'ArrowLeft' || k === 'ArrowRight')) {
+    const bs = [...$('bar').querySelectorAll('button')];
+    const i = (bs.indexOf(document.activeElement) + (k === 'ArrowRight' ? 1 : -1) + bs.length) % bs.length;
+    bs[i].focus(); showBar();
+  }
+  else if (!barOn && k === 'ArrowRight') go(1);
+  else if (!barOn && k === 'ArrowLeft') go(-1);
+  else showBar();
   e.preventDefault();
 });
+['mousemove', 'pointerdown', 'touchstart'].forEach(ev =>
+  addEventListener(ev, () => { if (running) showBar(); }, { passive: true }));
 
 // ---- Boot ----
 (async function () {
   readHash();
   token = ls.get('token');
   if (!token || Date.now() > +ls.get('tokenExp')) {
-    return setPanel('Photo Frame', 'Sign in with Google to choose photos from your shared album.', 'Sign in', () => signIn(false));
+    return setPanel('Photo Frame', 'Sign in with Google to choose photos from your shared album.', [['Sign in', () => signIn(false)]]);
   }
   // Access tokens last about an hour: renew quietly before they expire.
   setInterval(() => { if (Date.now() > +ls.get('tokenExp')) signIn(true); }, 30000);
   const sid = ls.get('session');
   if (sid) { try { items = await loadItems(sid); } catch (e) { items = []; } }
-  items.length ? play() : startPick();
+  items.length ? showReady() : startPick();
 })();
 </script>
 </body>
