@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Photo Frame</title>
+<style>
+  :root{--bg:#000;--fg:#e9e7e2;--dim:#9a978f;--accent:#8fb8c9}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:28px/1.4 "Segoe UI",system-ui,sans-serif;overflow:hidden;cursor:none}
+  .layer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1.2s ease}
+  .layer.on{opacity:1}
+  #panel{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;padding:40px;background:var(--bg)}
+  #panel.hide{display:none}
+  h1{margin:0;font-size:52px;font-weight:600;letter-spacing:.01em}
+  p{margin:0;max-width:760px;color:var(--dim)}
+  #qr{background:#fff;padding:14px;border-radius:6px}
+  #qr:empty{display:none}
+  button{font:inherit;color:var(--fg);background:none;border:2px solid var(--accent);border-radius:6px;padding:12px 34px}
+  button:focus{outline:none;background:var(--accent);color:#000}
+  #hud{position:absolute;bottom:28px;left:0;right:0;z-index:4;text-align:center;font-size:24px;opacity:0;transition:opacity .4s;text-shadow:0 0 10px #000}
+  #hud.on{opacity:1}
+</style>
+</head>
+<body>
+<img id="a" class="layer" alt=""><img id="b" class="layer" alt="">
+<div id="hud"></div>
+<div id="panel"><h1 id="t"></h1><p id="m"></p><div id="qr"></div><button id="btn"></button></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// ---- Settings ----
+const CLIENT_ID = '483827844017-7tbq4micf45tscn4tk4r54bd3cdueo4a.apps.googleusercontent.com';
+const SECONDS = 10; // time per photo
+// ------------------
+const SCOPE = 'https://www.googleapis.com/auth/photospicker.mediaitems.readonly';
+const API = 'https://photospicker.googleapis.com/v1';
+const $ = id => document.getElementById(id);
+const ls = {
+  get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} },
+  del: k => { try { localStorage.removeItem(k); } catch (e) {} }
+};
+let token, items = [], order = [], idx = 0, front = 0, timer, running = false, paused = false;
+let shuffle = ls.get('shuffle') !== '0', lock, fallback, pickToken = 0;
+const cache = new Map();
+
+function setPanel(title, msg, label, fn, qrUrl) {
+  $('t').textContent = title; $('m').textContent = msg;
+  $('qr').innerHTML = '';
+  if (qrUrl) new QRCode($('qr'), { text: qrUrl, width: 300, height: 300 });
+  const b = $('btn'); b.style.display = label ? '' : 'none';
+  if (label) { b.textContent = label; b.onclick = fn; b.focus(); }
+  $('panel').classList.remove('hide');
+}
+function hud(text) {
+  const h = $('hud'); h.textContent = text; h.classList.add('on');
+  clearTimeout(hud.t); hud.t = setTimeout(() => h.classList.remove('on'), 2500);
+}
+
+// ---- Sign in (OAuth implicit flow by redirect) ----
+function signIn(silent) {
+  const p = new URLSearchParams({
+    client_id: CLIENT_ID, redirect_uri: location.origin + location.pathname,
+    response_type: 'token', scope: SCOPE
+  });
+  if (silent) p.set('prompt', 'none');
+  location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + p;
+}
+function readHash() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get('access_token')) {
+    ls.set('token', h.get('access_token'));
+    ls.set('tokenExp', Date.now() + (+h.get('expires_in') - 180) * 1000);
+  } else if (h.get('error')) ls.del('token');
+  if (location.hash) history.replaceState(null, '', location.pathname);
+}
+
+// ---- Picker API ----
+async function api(path, opt = {}) {
+  const r = await fetch(API + path, { ...opt, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' } });
+  if (r.status === 401) { ls.del('token'); throw new Error('auth'); }
+  if (!r.ok) throw new Error('api ' + r.status);
+  return r.json();
+}
+async function loadItems(sessionId) {
+  let out = [], page = '';
+  do {
+    const d = await api('/mediaItems?sessionId=' + sessionId + '&pageSize=100' + (page ? '&pageToken=' + page : ''));
+    out.push(...(d.mediaItems || []).filter(m => m.type === 'PHOTO'));
+    page = d.nextPageToken;
+  } while (page);
+  return out;
+}
+async function startPick() {
+  const mine = ++pickToken; running = false; clearTimeout(timer);
+  setPanel('Choose photos', 'Preparing…');
+  try {
+    const s = await api('/sessions', { method: 'POST', body: JSON.stringify({ pickingConfig: { maxItemCount: '2000' } }) });
+    ls.set('session', s.id);
+    setPanel('Choose photos', 'Scan with your phone (same Google account), open your shared album, select the photos and tap Done.', null, null, s.pickerUri + '/autoclose');
+    const every = (parseFloat(s.pollingConfig && s.pollingConfig.pollInterval) || 5) * 1000;
+    const until = Date.now() + (parseFloat(s.pollingConfig && s.pollingConfig.timeoutIn) || 600) * 1000;
+    while (mine === pickToken && Date.now() < until) {
+      await new Promise(r => setTimeout(r, every));
+      const st = await api('/sessions/' + s.id);
+      if (st.mediaItemsSet) {
+        items = await loadItems(s.id);
+        if (!items.length) return setPanel('No photos found', 'Your selection had no photos.', 'Choose again', startPick);
+        return play();
+      }
+    }
+    if (mine === pickToken) setPanel('Timed out', 'Nothing was selected.', 'Try again', startPick);
+  } catch (e) { fail(e); }
+}
+function fail(e) {
+  if (e.message === 'auth') setPanel('Signed out', 'Sign in again to continue.', 'Sign in', () => signIn(false));
+  else setPanel('Something went wrong', String(e.message), 'Try again', startPick);
+}
+
+// ---- Slideshow ----
+async function blobFor(m) {
+  const r = await fetch(m.mediaFile.baseUrl + '=w1920-h1080', { headers: { Authorization: 'Bearer ' + token } });
+  if (!r.ok) throw new Error('image ' + r.status);
+  return URL.createObjectURL(await r.blob());
+}
+function getImg(i) {
+  const m = items[order[((i % order.length) + order.length) % order.length]];
+  if (!cache.has(m.id)) {
+    cache.set(m.id, blobFor(m));
+    if (cache.size > 6) { const k = cache.keys().next().value; cache.get(k).then(URL.revokeObjectURL, () => {}); cache.delete(k); }
+  }
+  return cache.get(m.id);
+}
+function buildOrder() {
+  order = items.map((_, i) => i);
+  if (shuffle) for (let i = order.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [order[i], order[j]] = [order[j], order[i]]; }
+  idx = -1;
+}
+function play() {
+  $('panel').classList.add('hide'); running = true; paused = false;
+  buildOrder(); keepAwake(); step(1);
+}
+async function step(d) {
+  clearTimeout(timer);
+  idx = (idx + d + order.length) % order.length;
+  try {
+    const url = await getImg(idx);
+    const imgs = [$('a'), $('b')]; front ^= 1;
+    imgs[front].src = url;
+    try { await imgs[front].decode(); } catch (e) {}
+    imgs[front].classList.add('on'); imgs[front ^ 1].classList.remove('on');
+    getImg(idx + 1).catch(() => {});
+  } catch (e) { if (e.message === 'auth') return fail(e); }
+  if (!paused) timer = setTimeout(() => step(1), SECONDS * 1000);
+}
+
+// ---- Keep the TV awake ----
+async function keepAwake() {
+  try { if ('wakeLock' in navigator) { lock = await navigator.wakeLock.request('screen'); lock.onrelease = () => { lock = null; }; } } catch (e) {}
+  if (!fallback) { // a playing (invisible) video also keeps most players awake
+    const c = document.createElement('canvas'); c.width = c.height = 16;
+    const x = c.getContext('2d'); let n = 0;
+    setInterval(() => { x.fillStyle = (n++ % 2) ? '#000' : '#020202'; x.fillRect(0, 0, 16, 16); }, 1000);
+    const v = document.createElement('video');
+    v.muted = true; v.setAttribute('playsinline', '');
+    v.style.cssText = 'position:fixed;right:0;bottom:0;width:4px;height:4px;opacity:.02';
+    try { v.srcObject = c.captureStream(5); document.body.appendChild(v); v.play().catch(() => {}); fallback = v; } catch (e) {}
+  }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && running) keepAwake(); });
+
+// ---- Remote control ----
+addEventListener('keydown', e => {
+  if (!running) return;
+  const k = e.key; keepAwake();
+  if (k === 'ArrowRight' || k === 'MediaTrackNext' || k === 'MediaFastForward') { step(1); hud('Next'); }
+  else if (k === 'ArrowLeft' || k === 'MediaTrackPrevious' || k === 'MediaRewind') { step(-1); hud('Previous'); }
+  else if (k === 'Enter' || k === ' ' || k === 'MediaPlayPause' || k === 'MediaPlay' || k === 'MediaPause') {
+    paused = !paused; clearTimeout(timer); if (!paused) timer = setTimeout(() => step(1), SECONDS * 1000);
+    hud(paused ? 'Paused' : 'Playing');
+  } else if (k === 'ArrowUp') {
+    shuffle = !shuffle; ls.set('shuffle', shuffle ? '1' : '0');
+    const cur = order[idx]; buildOrder(); idx = order.indexOf(cur);
+    hud(shuffle ? 'Shuffle on' : 'Shuffle off');
+  } else if (k === 'ArrowDown') startPick();
+  else return;
+  e.preventDefault();
+});
+
+// ---- Boot ----
+(async function () {
+  readHash();
+  token = ls.get('token');
+  if (!token || Date.now() > +ls.get('tokenExp')) {
+    return setPanel('Photo Frame', 'Sign in with Google to choose photos from your shared album.', 'Sign in', () => signIn(false));
+  }
+  // Access tokens last about an hour: renew quietly before they expire.
+  setInterval(() => { if (Date.now() > +ls.get('tokenExp')) signIn(true); }, 30000);
+  const sid = ls.get('session');
+  if (sid) { try { items = await loadItems(sid); } catch (e) { items = []; } }
+  items.length ? play() : startPick();
+})();
+</script>
+</body>
+</html>
