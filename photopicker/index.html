@@ -3,272 +3,170 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Photo Frame</title>
+<title>Ambient API test</title>
 <style>
-  :root{--bg:#000;--fg:#e9e7e2;--dim:#9a978f;--accent:#8fb8c9}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:28px/1.4 "Segoe UI",system-ui,sans-serif;overflow:hidden}
-  body.idle,body.idle *{cursor:none}
-  .layer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1.2s ease}
-  .layer.on{opacity:1}
-  #panel{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;padding:40px;background:var(--bg)}
-  #panel.hide{display:none}
-  h1{margin:0;font-size:52px;font-weight:600;letter-spacing:.01em}
-  p{margin:0;max-width:760px;color:var(--dim)}
-  #qr{background:#fff;padding:14px;border-radius:6px}
-  #qr:empty{display:none}
-  #row,#bar{display:flex;flex-wrap:wrap;justify-content:center;gap:16px}
-  button{font:inherit;color:var(--fg);background:none;border:2px solid var(--accent);border-radius:6px;padding:12px 30px}
-  button:focus{outline:none;background:var(--accent);color:#000}
-  #bar{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);z-index:4;background:rgba(0,0,0,.7);padding:18px 24px;border-radius:12px;visibility:hidden;opacity:0;transition:opacity .3s}
-  #bar.on{visibility:visible;opacity:1}
-  #hud{position:absolute;top:28px;left:0;right:0;z-index:4;text-align:center;font-size:24px;opacity:0;transition:opacity .4s;text-shadow:0 0 10px #000}
-  #hud.on{opacity:1}
+  :root{--bg:#fff;--fg:#1d1d1b;--dim:#6a6760;--line:#d8d6cf;--accent:#1a6b8a;--ok:#2a7a3b;--bad:#b3261e}
+  @media(prefers-color-scheme:dark){:root{--bg:#161614;--fg:#eceae4;--dim:#9a978f;--line:#3a3935;--accent:#8fb8c9;--ok:#7bc68a;--bad:#f2867f}}
+  body{margin:0 auto;padding:24px;max-width:820px;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,sans-serif}
+  h1{font-size:26px;margin:0 0 4px} h2{font-size:18px;margin:28px 0 8px;padding-top:16px;border-top:1px solid var(--line)}
+  p{margin:6px 0;color:var(--dim)} label{display:block;margin:10px 0 2px}
+  input{width:100%;box-sizing:border-box;padding:8px;font:inherit;color:var(--fg);background:none;border:1px solid var(--line);border-radius:4px}
+  button{font:inherit;color:var(--bg);background:var(--accent);border:0;border-radius:4px;padding:9px 18px;margin-top:12px;cursor:pointer}
+  button:disabled{opacity:.4;cursor:default}
+  #qr,#qr2{display:inline-block;background:#fff;padding:10px;border-radius:4px;margin:8px 0}
+  #qr:empty,#qr2:empty{display:none}
+  code{font:15px ui-monospace,monospace;background:var(--line);padding:1px 6px;border-radius:3px}
+  #status{margin:10px 0;font-weight:600} .ok{color:var(--ok)} .bad{color:var(--bad)}
+  pre{white-space:pre-wrap;font:14px/1.5 ui-monospace,monospace;background:none;border:1px solid var(--line);border-radius:4px;padding:10px;max-height:340px;overflow:auto}
+  #thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin-top:10px}
+  #thumbs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;background:var(--line)}
 </style>
 </head>
 <body>
-<img id="a" class="layer" alt=""><img id="b" class="layer" alt="">
-<div id="hud"></div>
-<div id="bar">
-  <button id="prev">Previous</button>
-  <button id="pp">Pause</button>
-  <button id="next">Next</button>
-  <button id="sh">Shuffle: On</button>
-  <button id="pick">Choose photos</button>
-</div>
-<div id="panel"><h1 id="t"></h1><p id="m"></p><div id="qr"></div><div id="row"></div></div>
+<h1>Ambient API test</h1>
+<p>Checks how many photos the Google Photos Ambient API returns for your album, and whether other people's photos are included.</p>
+
+<h2>1. Credentials</h2>
+<p>Use an OAuth client of type "TVs and Limited Input devices" in a project with the Ambient API enabled. These stay in this browser only.</p>
+<label for="cid">Client ID</label><input id="cid" autocomplete="off">
+<label for="sec">Client secret</label><input id="sec" type="password" autocomplete="off">
+<button id="go">Start sign-in</button>
+
+<h2>2. Sign in and choose the album</h2>
+<div id="status"></div>
+<div id="qr"></div>
+<p id="codeinfo"></p>
+<div id="qr2"></div>
+<p id="settings"></p>
+
+<h2>3. Count the photos</h2>
+<p>Each run uses roughly 25 to 60 of the 240 requests allowed per device per day.</p>
+<button id="run" disabled>Run photo count</button>
+<pre id="log"></pre>
+<div id="thumbs"></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-// ---- Settings ----
-const CLIENT_ID = '483827844017-7tbq4micf45tscn4tk4r54bd3cdueo4a.apps.googleusercontent.com';
-const SECONDS = 10; // time per photo
-// ------------------
-const SCOPE = 'https://www.googleapis.com/auth/photospicker.mediaitems.readonly';
-const API = 'https://photospicker.googleapis.com/v1';
 const $ = id => document.getElementById(id);
-const ls = {
-  get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
-  set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} },
-  del: k => { try { localStorage.removeItem(k); } catch (e) {} }
-};
-let token, items = [], order = [], idx = 0, front = 0, timer, barTimer, running = false, paused = false;
-let shuffle = ls.get('shuffle') !== '0', lock, fallback, pickToken = 0;
-const cache = new Map();
+const SCOPE = 'profile https://www.googleapis.com/auth/photosambient.mediaitems';
+const BASE = 'https://photosambient.googleapis.com/v1';
+const store = { get: k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let token = '', device = null, reqs = 0;
+$('cid').value = store.get('amb_cid'); $('sec').value = store.get('amb_sec');
 
-// ---- Panel, bar and messages ----
-function setPanel(title, msg, buttons, qrUrl) {
-  running = false; clearTimeout(timer); hideBar();
-  document.body.classList.remove('idle');
-  $('t').textContent = title; $('m').textContent = msg;
-  $('qr').innerHTML = '';
-  if (qrUrl) new QRCode($('qr'), { text: qrUrl, width: 300, height: 300 });
-  const row = $('row'); row.innerHTML = '';
-  (buttons || []).forEach(([label, fn]) => {
-    const b = document.createElement('button'); b.textContent = label; b.onclick = fn; row.appendChild(b);
-  });
-  $('panel').classList.remove('hide');
-  if (row.firstChild) row.firstChild.focus();
-}
-function hud(text) {
-  const h = $('hud'); h.textContent = text; h.classList.add('on');
-  clearTimeout(hud.t); hud.t = setTimeout(() => h.classList.remove('on'), 2000);
-}
-function updateBar() {
-  $('pp').textContent = paused ? 'Play' : 'Pause';
-  $('sh').textContent = 'Shuffle: ' + (shuffle ? 'On' : 'Off');
-}
-function showBar() {
-  const bar = $('bar'); updateBar();
-  bar.classList.add('on'); document.body.classList.remove('idle');
-  if (!bar.contains(document.activeElement)) $('pp').focus();
-  clearTimeout(barTimer); barTimer = setTimeout(hideBar, 6000);
-}
-function hideBar() {
-  clearTimeout(barTimer);
-  $('bar').classList.remove('on');
-  if ($('bar').contains(document.activeElement)) document.activeElement.blur();
-  if (running) document.body.classList.add('idle');
+function status(msg, cls) { const s = $('status'); s.textContent = msg; s.className = cls || ''; }
+function log(msg) { $('log').textContent += msg + '\n'; }
+function qr(el, text) { el.innerHTML = ''; new QRCode(el, { text, width: 200, height: 200 }); }
+
+async function api(url, opt = {}) {
+  const r = await fetch(url, { ...opt, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' } });
+  const body = await r.text();
+  if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + body.slice(0, 400));
+  return body ? JSON.parse(body) : {};
 }
 
-// ---- Sign in (OAuth implicit flow by redirect) ----
-function signIn(silent) {
-  const p = new URLSearchParams({
-    client_id: CLIENT_ID, redirect_uri: location.origin + location.pathname,
-    response_type: 'token', scope: SCOPE
-  });
-  if (silent) p.set('prompt', 'none');
-  location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + p;
-}
-function readHash() {
-  const h = new URLSearchParams(location.hash.slice(1));
-  if (h.get('access_token')) {
-    ls.set('token', h.get('access_token'));
-    ls.set('tokenExp', Date.now() + (+h.get('expires_in') - 180) * 1000);
-  } else if (h.get('error')) ls.del('token');
-  if (location.hash) history.replaceState(null, '', location.pathname);
-}
-
-// ---- Picker API ----
-async function api(path, opt = {}) {
-  const r = await fetch(API + path, { ...opt, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' } });
-  if (r.status === 401) { ls.del('token'); throw new Error('auth'); }
-  if (!r.ok) {
-    let msg = 'Google returned ' + r.status;
-    try { const j = await r.json(); if (j.error && j.error.message) msg += ': ' + j.error.message; } catch (e) {}
-    throw new Error(msg);
-  }
-  return r.json();
-}
-async function loadItems(sessionId) {
-  let out = [], page = '';
-  do {
-    const d = await api('/mediaItems?sessionId=' + sessionId + '&pageSize=100' + (page ? '&pageToken=' + page : ''));
-    out.push(...(d.mediaItems || []).filter(m => m.type === 'PHOTO'));
-    page = d.nextPageToken;
-  } while (page);
-  return out;
-}
-async function startPick() {
-  const mine = ++pickToken;
-  setPanel('Choose photos', 'Preparing…');
+async function start() {
+  const cid = $('cid').value.trim(), sec = $('sec').value.trim();
+  if (!cid || !sec) return status('Enter the client ID and secret first.', 'bad');
+  store.set('amb_cid', cid); store.set('amb_sec', sec);
+  $('go').disabled = true; $('run').disabled = true; $('log').textContent = ''; $('thumbs').innerHTML = '';
   try {
-    const s = await api('/sessions', { method: 'POST', body: JSON.stringify({ pickingConfig: { maxItemCount: '2000' } }) });
-    ls.set('session', s.id);
-    setPanel('Choose photos', 'Scan with your phone (same Google account), open your shared album, select the photos and tap Done.', null, s.pickerUri + '/autoclose');
-    const every = (parseFloat(s.pollingConfig && s.pollingConfig.pollInterval) || 5) * 1000;
-    const until = Date.now() + (parseFloat(s.pollingConfig && s.pollingConfig.timeoutIn) || 600) * 1000;
-    while (mine === pickToken && Date.now() < until) {
-      await new Promise(r => setTimeout(r, every));
-      if (mine !== pickToken) return;
-      const st = await api('/sessions/' + s.id);
-      if (st.mediaItemsSet) {
-        items = await loadItems(s.id);
-        if (!items.length) return setPanel('No photos found', 'Your selection had no photos.', [['Choose again', startPick]]);
-        return showReady();
-      }
+    const requestId = crypto.randomUUID();
+    status('Requesting a sign-in code…');
+    const r = await fetch('https://oauth2.googleapis.com/device/code', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id: cid, scope: SCOPE, state: JSON.stringify({ requestId, displayName: 'Photo Frame test' }) })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error('Sign-in code request failed: ' + JSON.stringify(d));
+    qr($('qr'), d.verification_url);
+    $('codeinfo').innerHTML = 'On your phone, scan the code (or open <code>' + d.verification_url + '</code>) and enter <code>' + d.user_code + '</code>.';
+    status('Waiting for you to approve on your phone…');
+
+    let every = (d.interval || 5) * 1000; const until = Date.now() + d.expires_in * 1000;
+    while (!token && Date.now() < until) {
+      await sleep(every);
+      const t = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ client_id: cid, client_secret: sec, device_code: d.device_code, grant_type: 'urn:ietf:params:oauth:grant-type:device_code' })
+      });
+      const j = await t.json();
+      if (j.access_token) token = j.access_token;
+      else if (j.error === 'slow_down') every += 5000;
+      else if (j.error && j.error !== 'authorization_pending') throw new Error('Token error: ' + JSON.stringify(j));
     }
-    if (mine === pickToken) setPanel('Timed out', 'Nothing was selected.', [['Try again', startPick]]);
-  } catch (e) { fail(e); }
-}
-function fail(e) {
-  if (e.message === 'auth') setPanel('Signed out', 'Sign in again to continue.', [['Sign in', () => signIn(false)]]);
-  else setPanel('Something went wrong', e.message, [['Try again', startPick], ['Sign in again', () => signIn(false)]]);
-}
-function showReady() {
-  const label = () => 'Shuffle: ' + (shuffle ? 'On' : 'Off');
-  setPanel(items.length + ' photos ready', 'Start the slideshow, or change the shuffle setting first.', [
-    ['Start slideshow', play],
-    [label(), e => { shuffle = !shuffle; ls.set('shuffle', shuffle ? '1' : '0'); e.currentTarget.textContent = label(); }],
-    ['Choose different photos', startPick]
-  ]);
+    if (!token) throw new Error('The sign-in code expired. Start again.');
+
+    status('Signed in. Creating a device…');
+    device = await api(BASE + '/devices?requestId=' + requestId, { method: 'POST', body: JSON.stringify({ displayName: 'Photo Frame test' }) });
+    $('qr').innerHTML = ''; $('codeinfo').textContent = '';
+    if (device.settingsUri) {
+      qr($('qr2'), device.settingsUri);
+      $('settings').innerHTML = 'Your phone should open the album settings by itself. If it did not, scan this code or <a href="' + device.settingsUri + '" target="_blank" rel="noopener">open the settings link</a>, then choose your shared album.';
+    }
+    status('Choose the album in Google Photos on your phone…');
+    const every2 = (parseFloat(device.pollingConfig && device.pollingConfig.pollInterval) || 5) * 1000;
+    while (!device.mediaSourcesSet) {
+      await sleep(every2);
+      device = await api(BASE + '/devices/' + encodeURIComponent(device.id));
+    }
+    $('qr2').innerHTML = '';
+    const names = (device.mediaSources || []).map(s => s.displayName || s.id).join(', ') || '(none listed)';
+    status('Album chosen: ' + names, 'ok');
+    $('run').disabled = false;
+  } catch (e) { status(e.message, 'bad'); }
+  $('go').disabled = false;
 }
 
-// ---- Slideshow ----
-async function blobFor(m) {
-  const r = await fetch(m.mediaFile.baseUrl + '=w1920-h1080', { headers: { Authorization: 'Bearer ' + token } });
-  if (!r.ok) throw new Error('image ' + r.status);
-  return URL.createObjectURL(await r.blob());
+async function listAll(sourceId, maxPages) {
+  const seen = new Map(); let t = '', pages = 0;
+  do {
+    const u = new URL(BASE + '/mediaItems');
+    u.searchParams.set('deviceId', device.id); u.searchParams.set('pageSize', '100');
+    if (sourceId) u.searchParams.set('mediaSourceId', sourceId);
+    if (t) u.searchParams.set('pageToken', t);
+    const d = await api(u.toString()); reqs++; pages++;
+    let fresh = 0;
+    for (const m of d.mediaItems || []) if (!seen.has(m.id)) { seen.set(m.id, m); fresh++; }
+    t = d.nextPageToken || '';
+    if (!fresh) break;
+  } while (t && pages < maxPages);
+  return seen;
 }
-function getImg(i) {
-  const m = items[order[((i % order.length) + order.length) % order.length]];
-  if (!cache.has(m.id)) {
-    cache.set(m.id, blobFor(m));
-    if (cache.size > 6) { const k = cache.keys().next().value; cache.get(k).then(URL.revokeObjectURL, () => {}); cache.delete(k); }
-  }
-  return cache.get(m.id);
-}
-function buildOrder() {
-  order = items.map((_, i) => i);
-  if (shuffle) for (let i = order.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [order[i], order[j]] = [order[j], order[i]]; }
-  idx = -1;
-}
-function play() {
-  $('panel').classList.add('hide'); running = true; paused = false;
-  buildOrder(); keepAwake(); step(1); showBar();
-}
-async function step(d) {
-  clearTimeout(timer);
-  let next = idx + d;
-  if (next >= order.length) { if (shuffle) buildOrder(); next = 0; } // reshuffle each loop
-  if (next < 0) next = order.length - 1;
-  idx = next;
+const isVideo = m => ((m.mediaFile && m.mediaFile.mimeType) || '').startsWith('video');
+const summary = map => { const v = [...map.values()].filter(isVideo).length; return map.size + ' items (' + (map.size - v) + ' photos, ' + v + ' videos)'; };
+
+async function run() {
+  $('run').disabled = true; $('log').textContent = ''; $('thumbs').innerHTML = ''; reqs = 0;
   try {
-    const url = await getImg(idx);
-    const imgs = [$('a'), $('b')]; front ^= 1;
-    imgs[front].src = url;
-    try { await imgs[front].decode(); } catch (e) {}
-    imgs[front].classList.add('on'); imgs[front ^ 1].classList.remove('on');
-    getImg(idx + 1).catch(() => {});
-  } catch (e) { if (e.message === 'auth') return fail(e); }
-  if (!paused && running) timer = setTimeout(() => step(1), SECONDS * 1000);
+    log('Curated set (what the ambient experience picks by default):');
+    const curated = await listAll('', 10);
+    log('  ' + summary(curated) + '\n');
+    const merged = new Map();
+    for (const s of (device.mediaSources || [])) {
+      if (s.id === 'highlights') { log(s.displayName + ': skipped (not supported by the API)\n'); continue; }
+      log('Source "' + (s.displayName || s.id) + '":');
+      const all = await listAll(s.id, 40);
+      log('  ' + summary(all) + '\n');
+      all.forEach((m, k) => merged.set(k, m));
+    }
+    log('Total unique across your chosen sources: ' + summary(merged));
+    log('Requests used this run: ' + reqs + ' of 240 per day.');
+    const sample = [...merged.values()].sort(() => Math.random() - .5).slice(0, 18);
+    for (const m of sample) {
+      const img = document.createElement('img'); $('thumbs').appendChild(img);
+      const url = m.mediaFile && m.mediaFile.baseUrl; if (!url) continue;
+      try {
+        const r = await fetch(url + '=w300-h300-c', { headers: { Authorization: 'Bearer ' + token } });
+        if (!r.ok) throw 0; img.src = URL.createObjectURL(await r.blob());
+      } catch (e) { img.src = url + '=w300-h300-c'; }
+    }
+    log('\nBelow is a random sample. Check whether photos added by other people appear.');
+  } catch (e) { log('\nError: ' + e.message); }
+  $('run').disabled = false;
 }
-function go(d) { step(d); hud(d > 0 ? 'Next' : 'Previous'); }
-function togglePause() {
-  paused = !paused; clearTimeout(timer);
-  if (!paused) timer = setTimeout(() => step(1), SECONDS * 1000);
-  updateBar(); hud(paused ? 'Paused' : 'Playing');
-}
-function toggleShuffle() {
-  shuffle = !shuffle; ls.set('shuffle', shuffle ? '1' : '0');
-  const cur = order[idx]; buildOrder(); idx = Math.max(0, order.indexOf(cur));
-  updateBar(); hud(shuffle ? 'Shuffle on' : 'Shuffle off');
-}
-$('prev').onclick = () => go(-1);
-$('next').onclick = () => go(1);
-$('pp').onclick = togglePause;
-$('sh').onclick = toggleShuffle;
-$('pick').onclick = startPick;
-
-// ---- Keep the TV awake ----
-async function keepAwake() {
-  try { if ('wakeLock' in navigator) { lock = await navigator.wakeLock.request('screen'); lock.onrelease = () => { lock = null; }; } } catch (e) {}
-  if (!fallback) { // a playing (invisible) video also keeps most players awake
-    const c = document.createElement('canvas'); c.width = c.height = 16;
-    const x = c.getContext('2d'); let n = 0;
-    setInterval(() => { x.fillStyle = (n++ % 2) ? '#000' : '#020202'; x.fillRect(0, 0, 16, 16); }, 1000);
-    const v = document.createElement('video');
-    v.muted = true; v.setAttribute('playsinline', '');
-    v.style.cssText = 'position:fixed;right:0;bottom:0;width:4px;height:4px;opacity:.02';
-    try { v.srcObject = c.captureStream(5); document.body.appendChild(v); v.play().catch(() => {}); fallback = v; } catch (e) {}
-  }
-}
-document.addEventListener('visibilitychange', () => { if (!document.hidden && running) keepAwake(); });
-
-// ---- Remote, keyboard and pointer ----
-addEventListener('keydown', e => {
-  if (!running) return;
-  keepAwake();
-  const k = e.key, barOn = $('bar').classList.contains('on');
-  if (k === 'Escape' || k === 'GoBack' || k === 'BrowserBack') { if (barOn) { hideBar(); e.preventDefault(); } return; }
-  if (k === 'MediaTrackNext' || k === 'MediaFastForward') go(1);
-  else if (k === 'MediaTrackPrevious' || k === 'MediaRewind') go(-1);
-  else if (k === 'MediaPlayPause' || k === 'MediaPlay' || k === 'MediaPause') togglePause();
-  else if (barOn && (k === 'Enter' || k === ' ')) { clearTimeout(barTimer); barTimer = setTimeout(hideBar, 6000); return; }
-  else if (barOn && (k === 'ArrowLeft' || k === 'ArrowRight')) {
-    const bs = [...$('bar').querySelectorAll('button')];
-    const i = (bs.indexOf(document.activeElement) + (k === 'ArrowRight' ? 1 : -1) + bs.length) % bs.length;
-    bs[i].focus(); showBar();
-  }
-  else if (!barOn && k === 'ArrowRight') go(1);
-  else if (!barOn && k === 'ArrowLeft') go(-1);
-  else showBar();
-  e.preventDefault();
-});
-['mousemove', 'pointerdown', 'touchstart'].forEach(ev =>
-  addEventListener(ev, () => { if (running) showBar(); }, { passive: true }));
-
-// ---- Boot ----
-(async function () {
-  readHash();
-  token = ls.get('token');
-  if (!token || Date.now() > +ls.get('tokenExp')) {
-    return setPanel('Photo Frame', 'Sign in with Google to choose photos from your shared album.', [['Sign in', () => signIn(false)]]);
-  }
-  // Access tokens last about an hour: renew quietly before they expire.
-  setInterval(() => { if (Date.now() > +ls.get('tokenExp')) signIn(true); }, 30000);
-  const sid = ls.get('session');
-  if (sid) { try { items = await loadItems(sid); } catch (e) { items = []; } }
-  items.length ? showReady() : startPick();
-})();
+$('go').onclick = start; $('run').onclick = run;
 </script>
 </body>
 </html>
